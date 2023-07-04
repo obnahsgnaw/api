@@ -16,6 +16,15 @@ type Manager struct {
 	errObjProvider errobj.Provider
 }
 
+func New(p Provider, ebj errobj.Provider) *Manager {
+	return &Manager{
+		debug:          false,
+		provider:       p,
+		logger:         nil,
+		errObjProvider: ebj,
+	}
+}
+
 func (m *Manager) SetLogger(logger *zap.Logger) {
 	m.logger = logger
 }
