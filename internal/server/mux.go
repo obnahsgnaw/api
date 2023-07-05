@@ -2,12 +2,12 @@ package server
 
 import (
 	"context"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/errhandler"
 	"github.com/obnahsgnaw/api/internal/marshaler"
 	"github.com/obnahsgnaw/api/pkg/errobj"
 	"github.com/obnahsgnaw/api/service"
 	"github.com/obnahsgnaw/application/pkg/debug"
-	"github.com/obnahsgnaw/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc/metadata"
 	"net/http"
 )

@@ -2,7 +2,7 @@ package authroute
 
 import (
 	"errors"
-	"github.com/obnahsgnaw/grpc-gateway/v2/protoc-gen-openapiv2/options"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"

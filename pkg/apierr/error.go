@@ -2,7 +2,7 @@ package apierr
 
 import (
 	"errors"
-	"github.com/obnahsgnaw/grpc-gateway/v2/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 )
 
 // ApiError app error
