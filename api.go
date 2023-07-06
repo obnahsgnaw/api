@@ -294,7 +294,7 @@ func (s *Server) WithDocService(config *apidoc.Config) {
 			Id:      s.id,
 			Name:    s.name,
 			Type:    s.st.String(),
-			EndType: s.et.String(),
+			EndType: config.EndType.String(),
 		},
 		Host: s.host.String(),
 		Val:  "",
