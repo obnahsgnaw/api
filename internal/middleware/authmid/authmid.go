@@ -8,6 +8,7 @@ import (
 	"github.com/obnahsgnaw/api/service"
 	"github.com/obnahsgnaw/api/service/autheduser"
 	"net/http"
+	"strconv"
 )
 
 // NewMuxAuthBeforeMid auth middleware
@@ -24,20 +25,19 @@ func NewMuxAuthBeforeMid(manager *autheduser.Manager) service.MuxRouteHandleFunc
 			}
 			var err error
 			var user autheduser.User
-			// 外部验证 验证后在头写入用户数据
-			if manager.OutsideValidate {
+			// validate outside, decode the user data
+			if manager.OutsideValidate() {
 				if manager.Logger() != nil {
-					manager.Logger().Debug("Middleware [Auth ]: auth outside")
+					manager.Logger().Debug("Middleware [Auth ]: outside validate")
 				}
-				user, err = manager.Provider().GetValidUser(r.Header.Get("X-User-Id"))
+				userStream := r.Header.Get(manager.OutsideHandler().Key)
+				user, err = manager.OutsideHandler().Decode([]byte(userStream))
 			} else {
+				// validate internal, fetch the user from provider
 				if manager.Logger() != nil {
-					manager.Logger().Debug("Middleware [Auth]: auth inside")
+					manager.Logger().Debug("Middleware [Auth ]: internal validate")
 				}
-
-				if user, err = manager.Provider().GetValidTokenUser(appId, token); err == nil {
-					r.Header.Set("X-User-Id", user.Uid())
-				}
+				user, err = manager.Provider().GetValidTokenUser(appId, token)
 			}
 
 			if err != nil {
@@ -53,9 +53,13 @@ func NewMuxAuthBeforeMid(manager *autheduser.Manager) service.MuxRouteHandleFunc
 					manager,
 				)
 				return false
+			} else {
+				if manager.Logger() != nil {
+					manager.Logger().Debug("Middleware [Auth ]: user " + strconv.Itoa(int(user.Id())))
+				}
+				r.Header.Set("X-User-Id", user.Uid())
 			}
 			manager.Add(rqId, user)
-
 		} else {
 			if manager.Logger() != nil {
 				manager.Logger().Debug("Middleware [Auth ]: not need auth")

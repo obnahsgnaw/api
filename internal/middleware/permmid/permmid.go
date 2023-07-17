@@ -23,7 +23,7 @@ func NewMuxPermissionMid(manager *perm.Manager) service.MuxRouteHandleFunc {
 		}
 		method := strings.ToLower(r.Method)
 		var err error
-		// 验证公共权限
+		// 验证权限
 		if err = manager.Provider().Can(appId, userId, method, pattern); err != nil {
 			if manager.Logger() != nil {
 				manager.Logger().Debug("Middleware [perm ]: no perm, err=" + err.Error())

@@ -5,6 +5,8 @@ import (
 	"github.com/obnahsgnaw/api/service/sign"
 )
 
+// if validate outside, then not user the mid
+
 func NewSignMid(manager *sign.Manager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//appId := c.GetHeader("X-App-Id")

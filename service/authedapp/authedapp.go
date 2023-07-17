@@ -7,14 +7,19 @@ import (
 
 // Manager authed app manager
 type Manager struct {
-	Project         string
-	debug           bool
-	Backend         bool
-	OutsideValidate bool
-	apps            map[string]App
-	provider        AppProvider
-	errObjProvider  errobj.Provider
-	logger          *zap.Logger
+	Project        string
+	debug          bool
+	Backend        bool
+	outsideHandler *OutsideHandler
+	apps           map[string]App
+	provider       AppProvider
+	errObjProvider errobj.Provider
+	logger         *zap.Logger
+}
+
+type OutsideHandler struct {
+	Key    string
+	Decode func([]byte) (App, error)
 }
 
 // AppProvider app provider interface
@@ -29,34 +34,45 @@ type App interface {
 	Name() string
 	Backend() bool
 	Scope() []string
+	Attr(attr string) (interface{}, bool)
 }
 
 // New return an authed app manager
-func New(project string, provider AppProvider, errObjProvider errobj.Provider, outsideValidate, backend, debug bool) *Manager {
+func New(project string, provider AppProvider, errObjProvider errobj.Provider, backend, debug bool) *Manager {
 	return &Manager{
-		Project:         project,
-		Backend:         backend,
-		debug:           debug,
-		OutsideValidate: outsideValidate,
-		apps:            make(map[string]App),
-		provider:        provider,
-		errObjProvider:  errObjProvider,
+		Project:        project,
+		Backend:        backend,
+		debug:          debug,
+		apps:           make(map[string]App),
+		provider:       provider,
+		errObjProvider: errObjProvider,
 	}
 }
 
-// Add a authed app for request id
+// NewOutside return an outside authed app manager
+func NewOutside(project string, provider *OutsideHandler, errObjProvider errobj.Provider, debug bool) *Manager {
+	return &Manager{
+		Project:        project,
+		debug:          debug,
+		apps:           make(map[string]App),
+		errObjProvider: errObjProvider,
+		outsideHandler: provider,
+	}
+}
+
+// Add an authed app for request id
 func (m *Manager) Add(rqId string, app App) {
 	m.apps[rqId] = app
 }
 
-// Rm remove a authed app for request id
+// Rm remove an authed app for request id
 func (m *Manager) Rm(rqId string) {
 	if _, ok := m.apps[rqId]; ok {
 		delete(m.apps, rqId)
 	}
 }
 
-// Get return a authed app for request id
+// Get return an authed app for request id
 func (m *Manager) Get(rqId string) (app App, exist bool) {
 	app, exist = m.apps[rqId]
 	return
@@ -86,4 +102,12 @@ func (m *Manager) SetDebug(enable bool) {
 
 func (m *Manager) Debug() bool {
 	return m.debug
+}
+
+func (m *Manager) OutsideValidate() bool {
+	return m.outsideHandler != nil
+}
+
+func (m *Manager) OutsideHandler() *OutsideHandler {
+	return m.outsideHandler
 }

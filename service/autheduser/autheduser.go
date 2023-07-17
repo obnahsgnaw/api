@@ -8,14 +8,19 @@ import (
 
 // Manager authed user manager
 type Manager struct {
-	Backend         bool
-	OutsideValidate bool
-	debug           bool
-	users           map[string]User
-	provider        UserProvider
-	errObjProvider  errobj.Provider
-	authManager     *authroute.Manager
-	logger          *zap.Logger
+	Backend        bool
+	outsideHandler *OutsideHandler
+	debug          bool
+	users          map[string]User
+	provider       UserProvider
+	errObjProvider errobj.Provider
+	authManager    *authroute.Manager
+	logger         *zap.Logger
+}
+
+type OutsideHandler struct {
+	Key    string
+	Decode func([]byte) (User, error)
 }
 
 // User interface
@@ -23,6 +28,7 @@ type User interface {
 	Id() uint32
 	Uid() string
 	Name() string
+	Attr(attr string) (interface{}, bool)
 }
 
 // UserProvider User provider interface
@@ -33,14 +39,22 @@ type UserProvider interface {
 }
 
 // New return an authed user manager
-func New(provider UserProvider, errObjProvider errobj.Provider, authManager *authroute.Manager, outsideValidate, backend bool) *Manager {
+func New(provider UserProvider, errObjProvider errobj.Provider, authManager *authroute.Manager, backend bool) *Manager {
 	return &Manager{
-		Backend:         backend,
-		OutsideValidate: outsideValidate,
-		users:           make(map[string]User),
-		provider:        provider,
-		errObjProvider:  errObjProvider,
-		authManager:     authManager,
+		Backend:        backend,
+		users:          make(map[string]User),
+		provider:       provider,
+		errObjProvider: errObjProvider,
+		authManager:    authManager,
+	}
+}
+
+func NewOutside(provider *OutsideHandler, errObjProvider errobj.Provider, authManager *authroute.Manager) *Manager {
+	return &Manager{
+		users:          make(map[string]User),
+		outsideHandler: provider,
+		errObjProvider: errObjProvider,
+		authManager:    authManager,
 	}
 }
 
@@ -91,4 +105,12 @@ func (m *Manager) SetLogger(logger *zap.Logger) {
 
 func (m *Manager) Logger() *zap.Logger {
 	return m.logger
+}
+
+func (m *Manager) OutsideValidate() bool {
+	return m.outsideHandler != nil
+}
+
+func (m *Manager) OutsideHandler() *OutsideHandler {
+	return m.outsideHandler
 }
