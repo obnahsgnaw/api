@@ -21,7 +21,6 @@ func New(provider Provider, errObjProvider errobj.Provider) *Manager {
 	return &Manager{
 		provider:       provider,
 		errObjProvider: errObjProvider,
-		debug:          false,
 	}
 }
 
