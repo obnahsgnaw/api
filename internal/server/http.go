@@ -29,7 +29,7 @@ type HttpConfig struct {
 	ErrWriter      io.Writer
 	TrustedProxies []string
 	Cors           *cors.Config
-	MdProvider     service.MdProviders
+	MdProvider     *service.MethodMdProvider
 	Middlewares    []gin.HandlerFunc
 	MuxMiddleware  []service.MuxRouteHandleFunc
 	ExtRoutes      []service.RouteProvider
