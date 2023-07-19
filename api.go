@@ -51,7 +51,7 @@ type Server struct {
 	errWriter      io.Writer
 	trustedProxies []string
 	cors           *cors.Config
-	mdProvider     service.MdProviders
+	mdProvider     *service.MethodMdProvider
 	middlewares    []gin.HandlerFunc
 	muxMiddleware  []service.MuxRouteHandleFunc
 	extRoutes      []service.RouteProvider
@@ -75,7 +75,7 @@ func New(app *application.Application, id, name string, et endtype.EndType, path
 		errObjProvider: func(param errobj.Param) interface{} {
 			return param
 		},
-		mdProvider: make(service.MdProviders),
+		mdProvider: service.NewMdProvider(),
 	}
 	s.logger, s.err = logger.New(utils.ToStr("Api[", s.et.String(), "-", id, "]"), s.app.LogConfig(), s.app.Debugger().Debug())
 	s.regInfo = &regCenter.RegInfo{
@@ -194,8 +194,12 @@ func (s *Server) AddRoute(route service.RouteProvider) {
 	s.extRoutes = append(s.extRoutes, route)
 }
 
-func (s *Server) AddIncomeMd(key string, valProvider service.MdValParser) {
-	s.mdProvider[key] = valProvider
+func (s *Server) AddDefIncomeMd(key string, valProvider service.MdValParser) {
+	s.mdProvider.AddDefault(key, valProvider)
+}
+
+func (s *Server) AddIncomeMd(method, key string, valProvider service.MdValParser) {
+	s.mdProvider.Add(method, key, valProvider)
 }
 
 // ErrCode return err code factory

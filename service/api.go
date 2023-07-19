@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"net/http"
 )
 
@@ -16,3 +17,49 @@ type MdProviders map[string]MdValParser
 type RouteProvider func(engine *gin.Engine)
 
 type MuxRouteHandleFunc func(w http.ResponseWriter, r *http.Request, pathParams map[string]string, pattern string) bool
+
+type MethodMdProvider struct {
+	defProvider    MdProviders
+	methodProvider map[string]MdProviders
+}
+
+func NewMdProvider() *MethodMdProvider {
+	return &MethodMdProvider{
+		defProvider:    make(MdProviders),
+		methodProvider: make(map[string]MdProviders),
+	}
+}
+
+func (p *MethodMdProvider) AddDefault(key string, parser MdValParser) {
+	if key != "" && parser != nil {
+		p.defProvider[key] = parser
+	}
+}
+
+// Add method like:/backendapi.index.v1.OptionsService/OptionList
+func (p *MethodMdProvider) Add(method, key string, parser MdValParser) {
+	if method == "" || key == "" || parser == nil {
+		return
+	}
+	if _, ok := p.methodProvider[method]; !ok {
+		p.methodProvider[method] = make(MdProviders)
+	}
+	p.methodProvider[method][key] = parser
+}
+
+func (p *MethodMdProvider) Range(ctx context.Context, q *http.Request, handler func(key, val string)) {
+	if len(p.defProvider) > 0 {
+		for k, pp := range p.defProvider {
+			handler(k, pp(ctx, q))
+		}
+	}
+	method, ok := runtime.RPCMethod(ctx)
+	if !ok {
+		return
+	}
+	if pps, ok1 := p.methodProvider[method]; ok1 {
+		for k, pp := range pps {
+			handler(k, pp(ctx, q))
+		}
+	}
+}

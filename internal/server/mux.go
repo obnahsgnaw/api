@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func getRpcApiProxyMux(mdProviders service.MdProviders, middlewares []service.MuxRouteHandleFunc, p errobj.Provider, debugger debug.Debugger) *runtime.ServeMux {
+func getRpcApiProxyMux(mdProviders *service.MethodMdProvider, middlewares []service.MuxRouteHandleFunc, p errobj.Provider, debugger debug.Debugger) *runtime.ServeMux {
 	ops := []runtime.ServeMuxOption{
 		runtime.WithIncomingHeaderMatcher(func(s string) (string, bool) {
 			return "", false
@@ -21,10 +21,9 @@ func getRpcApiProxyMux(mdProviders service.MdProviders, middlewares []service.Mu
 		// trans header to metadata
 		runtime.WithMetadata(func(ctx context.Context, request *http.Request) metadata.MD {
 			var metaData []string
-			for k, valProvider := range mdProviders {
-				metaData = append(metaData, k)
-				metaData = append(metaData, valProvider(ctx, request))
-			}
+			mdProviders.Range(ctx, request, func(key, val string) {
+				metaData = append(metaData, key, val)
+			})
 			md := metadata.Pairs(metaData...)
 			return md
 		}),
