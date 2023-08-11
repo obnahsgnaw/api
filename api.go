@@ -56,6 +56,8 @@ type Server struct {
 	muxMiddleware  []service.MuxRouteHandleFunc
 	extRoutes      []service.RouteProvider
 	errObjProvider errobj.Provider
+	gatewayKeyGen  func() (string, error)
+	gatewayKey     string
 }
 
 // ServiceProvider api service provider
@@ -262,6 +264,21 @@ func (s *Server) Run(failedCb func(error)) {
 		} else {
 			s.debug("registered to center")
 		}
+		s.gatewayKey, err = s.gatewayKeyGen()
+		if err != nil {
+			failedCb(utils.NewWrappedError(s.msg("fetch gateway failed"), err))
+			return
+		}
+
+		if s.gatewayKey != "" {
+			if err = s.app.Register().Register(s.app.Context(), s.gatewayKey, url.Origin{
+				Protocol: url.HTTP,
+				Host:     s.host,
+			}.String(), s.app.RegTtl()); err != nil {
+				failedCb(utils.NewWrappedError(s.msg("register gateway failed"), err))
+				return
+			}
+		}
 	}
 	go func(host string, engine *gin.Engine) {
 		s.logger.Info(utils.ToStr("api[", s.Host().String(), "] listen and serving..."))
@@ -275,6 +292,10 @@ func (s *Server) Release() {
 	if s.app.Register() != nil {
 		s.debug("unregistered to center")
 		_ = s.register(false)
+		if s.gatewayKey != "" {
+			_ = s.app.Register().Unregister(s.app.Context(), s.gatewayKey)
+			s.gatewayKey = ""
+		}
 	}
 	s.debug("release logger")
 	_ = s.logger.Sync()
