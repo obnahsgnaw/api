@@ -264,19 +264,21 @@ func (s *Server) Run(failedCb func(error)) {
 		} else {
 			s.debug("registered to center")
 		}
-		s.gatewayKey, err = s.gatewayKeyGen()
-		if err != nil {
-			failedCb(utils.NewWrappedError(s.msg("fetch gateway failed"), err))
-			return
-		}
-
-		if s.gatewayKey != "" {
-			if err = s.app.Register().Register(s.app.Context(), s.gatewayKey, url.Origin{
-				Protocol: url.HTTP,
-				Host:     s.host,
-			}.String(), s.app.RegTtl()); err != nil {
-				failedCb(utils.NewWrappedError(s.msg("register gateway failed"), err))
+		if s.gatewayKeyGen != nil {
+			s.gatewayKey, err = s.gatewayKeyGen()
+			if err != nil {
+				failedCb(utils.NewWrappedError(s.msg("fetch gateway failed"), err))
 				return
+			}
+
+			if s.gatewayKey != "" {
+				if err = s.app.Register().Register(s.app.Context(), s.gatewayKey, url.Origin{
+					Protocol: url.HTTP,
+					Host:     s.host,
+				}.String(), s.app.RegTtl()); err != nil {
+					failedCb(utils.NewWrappedError(s.msg("register gateway failed"), err))
+					return
+				}
 			}
 		}
 	}
