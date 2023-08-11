@@ -70,3 +70,9 @@ func PermMiddleware(m *perm.Manager) Option {
 		s.AddMuxMiddleware(permmid.NewMuxPermissionMid(m))
 	}
 }
+func Gateway(keyGen func() (string, error)) Option {
+	return func(s *Server) {
+		s.debug("withed gateway")
+		s.gatewayKeyGen = keyGen
+	}
+}
