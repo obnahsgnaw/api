@@ -1,4 +1,12 @@
 
+<a name="v0.9.1"></a>
+## [v0.9.1](https://8.140.161.172/wangsb/wgateway/compare/v0.9.0...v0.9.1) (2023-08-11)
+
+### Bug Fixes
+
+* **api:** fix gateway key gen
+
+
 <a name="v0.9.0"></a>
 ## [v0.9.0](https://8.140.161.172/wangsb/wgateway/compare/v0.8.0...v0.9.0) (2023-08-11)
 
