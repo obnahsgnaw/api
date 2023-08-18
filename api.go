@@ -264,22 +264,9 @@ func (s *Server) Run(failedCb func(error)) {
 		} else {
 			s.debug("registered to center")
 		}
-		if s.gatewayKeyGen != nil {
-			s.gatewayKey, err = s.gatewayKeyGen()
-			if err != nil {
-				failedCb(utils.NewWrappedError(s.msg("fetch gateway failed"), err))
-				return
-			}
-
-			if s.gatewayKey != "" {
-				if err = s.app.Register().Register(s.app.Context(), s.gatewayKey, url.Origin{
-					Protocol: url.HTTP,
-					Host:     s.host,
-				}.String(), s.app.RegTtl()); err != nil {
-					failedCb(utils.NewWrappedError(s.msg("register gateway failed"), err))
-					return
-				}
-			}
+		if err = s.regGateway(); err != nil {
+			failedCb(err)
+			return
 		}
 	}
 	go func(host string, engine *gin.Engine) {
@@ -288,6 +275,29 @@ func (s *Server) Run(failedCb func(error)) {
 			failedCb(errors.New(s.msg("engine run failed, err=" + err.Error())))
 		}
 	}(s.host.String(), s.engine)
+}
+
+func (s *Server) regGateway() (err error) {
+	if s.gatewayKeyGen != nil {
+		s.gatewayKey, err = s.gatewayKeyGen()
+		if err != nil {
+			return utils.NewWrappedError(s.msg("fetch gateway failed"), err)
+		}
+
+		if s.gatewayKey != "" {
+			if err = s.app.Register().Register(s.app.Context(), s.gatewayKey, url.Origin{
+				Protocol: url.HTTP,
+				Host:     s.host,
+			}.String(), s.app.RegTtl()); err != nil {
+				return utils.NewWrappedError(s.msg("register gateway failed"), err)
+			}
+		}
+	}
+	return nil
+}
+
+func (s *Server) RefreshGateway() error {
+	return s.regGateway()
 }
 
 func (s *Server) Release() {
