@@ -7,6 +7,8 @@ import (
 	"github.com/obnahsgnaw/api/internal/marshaler"
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/service/crypt"
+	"github.com/obnahsgnaw/application/pkg/debug"
+	"github.com/obnahsgnaw/application/pkg/dynamic"
 	"io"
 )
 
@@ -26,13 +28,13 @@ func NewCryptMid(manager *crypt.Manager) gin.HandlerFunc {
 		userId := c.GetHeader("X-User-Id")
 		iv := c.GetHeader("X-User-Iv")
 		body, _ := io.ReadAll(c.Request.Body)
-		if manager.Logger() != nil {
+		if manager.Logger() != nil && manager.Debug() {
 			manager.Logger().Debug("Middleware [Crypt]: Body In=" + string(body))
 		}
 		// 解密
 		decrypted, err := manager.Provider().Decrypt(appId, userId, []byte(iv), body)
 		if err != nil {
-			if manager.Logger() != nil {
+			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [Crypt ]: decrypt failed, err=" + err.Error())
 			}
 			c.Abort()
@@ -42,7 +44,9 @@ func NewCryptMid(manager *crypt.Manager) gin.HandlerFunc {
 				c.Writer,
 				nil,
 				manager.ErrObjProvider(),
-				manager,
+				debug.New(dynamic.NewBool(func() bool {
+					return manager.Debug()
+				})),
 			)
 			return
 		}
@@ -58,7 +62,7 @@ func NewCryptMid(manager *crypt.Manager) gin.HandlerFunc {
 		encrypted, err := manager.Provider().Encrypt(appId, userId, []byte(iv), bdWriter.body.Bytes())
 		if err != nil {
 			bdWriter.body = bytes.NewBufferString("")
-			if manager.Logger() != nil {
+			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [Crypt ]: encrypt failed, err=" + err.Error())
 			}
 			c.Abort()
@@ -68,12 +72,14 @@ func NewCryptMid(manager *crypt.Manager) gin.HandlerFunc {
 				c.Writer,
 				nil,
 				manager.ErrObjProvider(),
-				manager,
+				debug.New(dynamic.NewBool(func() bool {
+					return manager.Debug()
+				})),
 			)
 			return
 		}
 		bdWriter.body = bytes.NewBuffer(encrypted)
-		if manager.Logger() != nil {
+		if manager.Logger() != nil && manager.Debug() {
 			manager.Logger().Debug("Middleware [Crypt]: Body Out=" + bdWriter.body.String())
 		}
 	}

@@ -2,13 +2,14 @@ package authedapp
 
 import (
 	"github.com/obnahsgnaw/api/pkg/errobj"
+	"github.com/obnahsgnaw/application/pkg/dynamic"
 	"go.uber.org/zap"
 )
 
 // Manager authed app manager
 type Manager struct {
 	Project        string
-	debug          bool
+	debug          dynamic.Bool
 	Backend        bool
 	outsideHandler *OutsideHandler
 	apps           map[string]App
@@ -38,7 +39,7 @@ type App interface {
 }
 
 // New return an authed app manager
-func New(project string, provider AppProvider, errObjProvider errobj.Provider, backend, debug bool) *Manager {
+func New(project string, provider AppProvider, errObjProvider errobj.Provider, backend bool, debug dynamic.Bool) *Manager {
 	return &Manager{
 		Project:        project,
 		Backend:        backend,
@@ -50,7 +51,7 @@ func New(project string, provider AppProvider, errObjProvider errobj.Provider, b
 }
 
 // NewOutside return an outside authed app manager
-func NewOutside(project string, provider *OutsideHandler, errObjProvider errobj.Provider, debug bool) *Manager {
+func NewOutside(project string, provider *OutsideHandler, errObjProvider errobj.Provider, debug dynamic.Bool) *Manager {
 	return &Manager{
 		Project:        project,
 		debug:          debug,
@@ -96,12 +97,8 @@ func (m *Manager) Logger() *zap.Logger {
 	return m.logger
 }
 
-func (m *Manager) SetDebug(enable bool) {
-	m.debug = enable
-}
-
 func (m *Manager) Debug() bool {
-	return m.debug
+	return m.debug.Val()
 }
 
 func (m *Manager) OutsideValidate() bool {

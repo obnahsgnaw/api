@@ -3,6 +3,7 @@ package autheduser
 import (
 	"github.com/obnahsgnaw/api/internal/server/authroute"
 	"github.com/obnahsgnaw/api/pkg/errobj"
+	"github.com/obnahsgnaw/application/pkg/dynamic"
 	"go.uber.org/zap"
 )
 
@@ -10,7 +11,7 @@ import (
 type Manager struct {
 	Backend        bool
 	outsideHandler *OutsideHandler
-	debug          bool
+	debug          dynamic.Bool
 	users          map[string]User
 	provider       UserProvider
 	errObjProvider errobj.Provider
@@ -39,22 +40,24 @@ type UserProvider interface {
 }
 
 // New return an authed user manager
-func New(provider UserProvider, errObjProvider errobj.Provider, authManager *authroute.Manager, backend bool) *Manager {
+func New(provider UserProvider, errObjProvider errobj.Provider, authManager *authroute.Manager, backend bool, debug dynamic.Bool) *Manager {
 	return &Manager{
 		Backend:        backend,
 		users:          make(map[string]User),
 		provider:       provider,
 		errObjProvider: errObjProvider,
 		authManager:    authManager,
+		debug:          debug,
 	}
 }
 
-func NewOutside(provider *OutsideHandler, errObjProvider errobj.Provider, authManager *authroute.Manager) *Manager {
+func NewOutside(provider *OutsideHandler, errObjProvider errobj.Provider, authManager *authroute.Manager, debug dynamic.Bool) *Manager {
 	return &Manager{
 		users:          make(map[string]User),
 		outsideHandler: provider,
 		errObjProvider: errObjProvider,
 		authManager:    authManager,
+		debug:          debug,
 	}
 }
 
@@ -81,12 +84,8 @@ func (m *Manager) Provider() UserProvider {
 	return m.provider
 }
 
-func (m *Manager) SetDebug(enable bool) {
-	m.debug = enable
-}
-
 func (m *Manager) Debug() bool {
-	return m.debug
+	return m.debug.Val()
 }
 
 // ErrObjProvider return err obj provider

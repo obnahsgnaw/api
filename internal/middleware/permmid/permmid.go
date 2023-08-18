@@ -6,6 +6,8 @@ import (
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/service"
 	"github.com/obnahsgnaw/api/service/perm"
+	"github.com/obnahsgnaw/application/pkg/debug"
+	"github.com/obnahsgnaw/application/pkg/dynamic"
 	"net/http"
 	"strings"
 )
@@ -13,19 +15,19 @@ import (
 // NewMuxPermissionMid 需要拿pattern来确定权限，所以没放到gin中间件
 func NewMuxPermissionMid(manager *perm.Manager) service.MuxRouteHandleFunc {
 	return func(w http.ResponseWriter, r *http.Request, pathParams map[string]string, pattern string) bool {
-		if manager.Logger() != nil {
+		if manager.Logger() != nil && manager.Debug() {
 			manager.Logger().Debug("Middleware [perm ]: enabled")
 		}
 		appId := r.Header.Get("X-App-Id")
 		userId := r.Header.Get("X-User-Id")
-		if manager.Logger() != nil {
+		if manager.Logger() != nil && manager.Debug() {
 			manager.Logger().Debug("Middleware [perm ]: enabled")
 		}
 		method := strings.ToLower(r.Method)
 		var err error
 		// 验证权限
 		if err = manager.Provider().Can(appId, userId, method, pattern); err != nil {
-			if manager.Logger() != nil {
+			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [perm ]: no perm, err=" + err.Error())
 			}
 			errhandler.HandlerErr(
@@ -34,11 +36,13 @@ func NewMuxPermissionMid(manager *perm.Manager) service.MuxRouteHandleFunc {
 				w,
 				nil,
 				manager.ErrObjProvider(),
-				manager,
+				debug.New(dynamic.NewBool(func() bool {
+					return manager.Debug()
+				})),
 			)
 			return false
 		} else {
-			if manager.Logger() != nil {
+			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [perm ]: accessed")
 			}
 		}

@@ -16,14 +16,14 @@ func NewSignMid(manager *sign.Manager) gin.HandlerFunc {
 		//uri := c.Request.URL.Path
 		// TODO
 
-		if manager.Logger() != nil {
+		if manager.Logger() != nil && manager.Debug() {
 			manager.Logger().Debug("Middleware [Sign ]: sign in=TODO")
 		}
 		// sign check TODO
 		//c.AbortWithStatus(http.StatusUnauthorized)
 		c.Next()
 		// sign generate
-		if manager.Logger() != nil {
+		if manager.Logger() != nil && manager.Debug() {
 			manager.Logger().Debug("Middleware [Sign ]: sign out=TODO")
 		}
 	}
