@@ -2,6 +2,7 @@ package sign
 
 import (
 	"github.com/obnahsgnaw/api/pkg/errobj"
+	"github.com/obnahsgnaw/application/pkg/dynamic"
 	"go.uber.org/zap"
 )
 
@@ -14,13 +15,14 @@ type Manager struct {
 	logger         *zap.Logger
 	provider       Provider
 	errObjProvider errobj.Provider
-	debug          bool
+	debug          dynamic.Bool
 }
 
-func New(provider Provider, errObjProvider errobj.Provider) *Manager {
+func New(provider Provider, errObjProvider errobj.Provider, debug dynamic.Bool) *Manager {
 	return &Manager{
 		provider:       provider,
 		errObjProvider: errObjProvider,
+		debug:          debug,
 	}
 }
 
@@ -29,12 +31,8 @@ func (m *Manager) Provider() Provider {
 	return m.provider
 }
 
-func (m *Manager) SetDebug(enable bool) {
-	m.debug = enable
-}
-
 func (m *Manager) Debug() bool {
-	return m.debug
+	return m.debug.Val()
 }
 
 func (m *Manager) ErrObjProvider() errobj.Provider {

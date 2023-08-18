@@ -2,6 +2,7 @@ package perm
 
 import (
 	"github.com/obnahsgnaw/api/pkg/errobj"
+	"github.com/obnahsgnaw/application/pkg/dynamic"
 	"go.uber.org/zap"
 )
 
@@ -10,15 +11,15 @@ type Provider interface {
 }
 
 type Manager struct {
-	debug          bool
+	debug          dynamic.Bool
 	provider       Provider
 	logger         *zap.Logger
 	errObjProvider errobj.Provider
 }
 
-func New(p Provider, ebj errobj.Provider) *Manager {
+func New(p Provider, ebj errobj.Provider, debug dynamic.Bool) *Manager {
 	return &Manager{
-		debug:          false,
+		debug:          debug,
 		provider:       p,
 		logger:         nil,
 		errObjProvider: ebj,
@@ -33,12 +34,8 @@ func (m *Manager) Logger() *zap.Logger {
 	return m.logger
 }
 
-func (m *Manager) SetDebug(enable bool) {
-	m.debug = enable
-}
-
 func (m *Manager) Debug() bool {
-	return m.debug
+	return m.debug.Val()
 }
 
 func (m *Manager) Provider() Provider {
