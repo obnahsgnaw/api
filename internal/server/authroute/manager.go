@@ -1,8 +1,8 @@
 package authroute
 
 import (
-	"errors"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2/options"
+	"github.com/obnahsgnaw/application/pkg/utils"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -18,6 +18,10 @@ type Manager struct {
 // New return new manager
 func New() *Manager {
 	return &Manager{route: make(map[string]struct{})}
+}
+
+func authRouteError(msg string) error {
+	return utils.TitledError("auth route error", msg, nil)
 }
 
 // AddAuthIgnoredRoute add ignore auth route
@@ -78,12 +82,12 @@ func ScanNoAuth(pathPrefix []string, handler func(prefix, method, urlPattern str
 					} else if uri = api.GetDelete(); uri != "" {
 						methodName = "DELETE"
 					} else {
-						err = errors.New("resource scan: Unknown method")
+						err = authRouteError("resource scan: Unknown method")
 						return false
 					}
 				}
 				if uri == "" || methodName == "" {
-					err = errors.New("resource scan: no method uri or method type[" + string(method.FullName()) + "]")
+					err = authRouteError("resource scan: no method uri or method type[" + string(method.FullName()) + "]")
 					return false
 				}
 				if noAuth {

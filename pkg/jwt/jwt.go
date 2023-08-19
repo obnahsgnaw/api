@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"crypto/subtle"
-	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/obnahsgnaw/application/pkg/utils"
@@ -11,6 +10,10 @@ import (
 )
 
 var SignMethod = jwt.SigningMethodHS256
+
+func jwtError(msg string) error {
+	return utils.TitledError("jwt error", msg, nil)
+}
 
 type Userinfo struct {
 	Id    string `json:"id"`
@@ -79,7 +82,7 @@ func ValidateToken(subject, issuer, tokenString string, keyProvider func(claims 
 			}
 		}
 
-		return nil, errors.New("unexpected payload")
+		return nil, jwtError("unexpected payload")
 	})
 
 	if err != nil {
@@ -88,13 +91,13 @@ func ValidateToken(subject, issuer, tokenString string, keyProvider func(claims 
 
 	if token.Valid {
 		if !claims.RegisteredClaims.VerifyIssuer(issuer, true) {
-			return Userinfo{}, errors.New("token issuer error")
+			return Userinfo{}, jwtError("token issuer error")
 		}
 		if !claims.RegisteredClaims.VerifyAudience(claims.Userinfo.Id, true) {
 			return Userinfo{}, jwt.ErrTokenInvalidAudience
 		}
 		if !verifySub(claims.RegisteredClaims.Subject, subject, true) {
-			return Userinfo{}, errors.New("token not for this application")
+			return Userinfo{}, jwtError("token not for this application")
 		}
 		return claims.Userinfo, nil
 	} else {
