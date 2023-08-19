@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/server"
@@ -58,6 +57,10 @@ type Server struct {
 	errObjProvider errobj.Provider
 	gatewayKeyGen  func() (string, error)
 	gatewayKey     string
+}
+
+func apiServerError(msg string, err error) error {
+	return utils.TitledError("api server error", msg, err)
 }
 
 // ServiceProvider api service provider
@@ -215,7 +218,7 @@ func (s *Server) msg(msg ...string) string {
 
 func (s *Server) Run(failedCb func(error)) {
 	if s.id == "" || s.name == "" {
-		failedCb(errors.New(s.msg("id name invalid")))
+		failedCb(apiServerError(s.msg("id name invalid"), nil))
 		return
 	}
 	if s.err != nil {
@@ -223,11 +226,11 @@ func (s *Server) Run(failedCb func(error)) {
 		return
 	}
 	if s.host.Port <= 0 || s.host.Ip == "" {
-		failedCb(errors.New(s.msg("host invalid")))
+		failedCb(apiServerError(s.msg("host invalid"), nil))
 		return
 	}
 	if s.pathPrefix == "" {
-		failedCb(errors.New(s.msg("path prefix empty")))
+		failedCb(apiServerError(s.msg("path prefix empty"), nil))
 		return
 	}
 	engine, mux, err := server.NewRpcHttpProxyServer(&server.HttpConfig{
@@ -244,14 +247,14 @@ func (s *Server) Run(failedCb func(error)) {
 		Debugger:       s.app.Debugger(),
 	})
 	if err != nil {
-		failedCb(utils.NewWrappedError(s.msg("new engine failed"), err))
+		failedCb(apiServerError(s.msg("new engine failed"), err))
 		return
 	}
 	s.engine = engine
 	s.mux = mux
 	for _, sp := range s.services {
 		if n, err := sp(s.app.Context(), s.mux); err != nil {
-			failedCb(utils.NewWrappedError(s.msg("register service ", n, " failed"), err))
+			failedCb(apiServerError(s.msg("register service ", n, " failed"), err))
 			return
 		} else {
 			s.debug("registered service:" + n)
@@ -259,7 +262,7 @@ func (s *Server) Run(failedCb func(error)) {
 	}
 	if s.app.Register() != nil {
 		if err = s.register(true); err != nil {
-			failedCb(utils.NewWrappedError(s.msg("register failed"), err))
+			failedCb(apiServerError(s.msg("register failed"), err))
 			return
 		} else {
 			s.debug("registered to center")
@@ -272,7 +275,7 @@ func (s *Server) Run(failedCb func(error)) {
 	go func(host string, engine *gin.Engine) {
 		s.logger.Info(utils.ToStr("api[", s.Host().String(), "] listen and serving..."))
 		if err = engine.Run(host); err != nil {
-			failedCb(errors.New(s.msg("engine run failed, err=" + err.Error())))
+			failedCb(apiServerError(s.msg("engine run failed, err="+err.Error()), nil))
 		}
 	}(s.host.String(), s.engine)
 }
@@ -281,7 +284,7 @@ func (s *Server) regGateway() (err error) {
 	if s.gatewayKeyGen != nil {
 		s.gatewayKey, err = s.gatewayKeyGen()
 		if err != nil {
-			return utils.NewWrappedError(s.msg("fetch gateway failed"), err)
+			return apiServerError(s.msg("fetch gateway failed"), err)
 		}
 
 		if s.gatewayKey != "" {
@@ -289,7 +292,7 @@ func (s *Server) regGateway() (err error) {
 				Protocol: url.HTTP,
 				Host:     s.host,
 			}.String(), s.app.RegTtl()); err != nil {
-				return utils.NewWrappedError(s.msg("register gateway failed"), err)
+				return apiServerError(s.msg("register gateway failed"), err)
 			}
 		}
 	}
