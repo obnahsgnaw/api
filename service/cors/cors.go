@@ -9,11 +9,11 @@ var (
 )
 
 type Config struct {
-	AllowOrigin      string
-	AllowMethods     []string
-	AllowHeaders     []string
-	AllowCredentials bool
-	ExposeHeaders    []string
+	AllowOrigin      string   `json:"allow_origin" yaml:"allow_origin" ini:"allow-origin" long:"cors-allow-origin" description:"cors allow origin"`
+	AllowMethods     []string `json:"allow_methods" yaml:"allow_methods" ini:"allow-methods" long:"cors-allow-methods" description:"cors allow methods"`
+	AllowHeaders     []string `json:"allow_headers" yaml:"allow_headers" ini:"allow-headers" long:"cors-allow-headers" description:"cors allow headers"`
+	AllowCredentials bool     `json:"allow_credentials" yaml:"allow_credentials" ini:"allow-credentials" long:"cors-allow-credentials" description:"cors allow credentials"`
+	ExposeHeaders    []string `json:"expose_headers" yaml:"expose_headers" ini:"expose-headers" long:"expose-headers" description:"cors expose headers"`
 }
 
 func (c Config) Origin() string {
