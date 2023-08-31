@@ -280,14 +280,16 @@ func (s *Server) Run(failedCb func(error)) {
 	}(s.host.String(), s.engine)
 }
 
-func (s *Server) regGateway() (err error) {
+func (s *Server) regGateway() error {
 	if s.gatewayKeyGen != nil {
-		s.gatewayKey, err = s.gatewayKeyGen()
+		key, err := s.gatewayKeyGen()
 		if err != nil {
 			return apiServerError(s.msg("fetch gateway failed"), err)
 		}
 
-		if s.gatewayKey != "" {
+		if key != "" && key != s.gatewayKey {
+			s.gatewayKey = key
+			_ = s.app.Register().Unregister(s.app.Context(), s.gatewayKey)
 			if err = s.app.Register().Register(s.app.Context(), s.gatewayKey, url.Origin{
 				Protocol: url.HTTP,
 				Host:     s.host,
