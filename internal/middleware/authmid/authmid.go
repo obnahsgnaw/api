@@ -27,19 +27,19 @@ func NewMuxAuthBeforeMid(manager *autheduser.Manager) service.MuxRouteHandleFunc
 			}
 			var err error
 			var user autheduser.User
-			// validate outside, decode the user data
+			// validate outside, fetch the uid user from provide
 			if manager.OutsideValidate() {
 				if manager.Logger() != nil && manager.Debug() {
 					manager.Logger().Debug("Middleware [Auth ]: outside validate")
 				}
-				userStream := r.Header.Get(manager.OutsideHandler().Key)
-				user, err = manager.OutsideHandler().Decode([]byte(userStream))
+				uid := r.Header.Get("X-User-Id")
+				user, err = manager.Provider().GetIdUser(uid)
 			} else {
-				// validate internal, fetch the user from provider
+				// validate inside, fetch the token user from provider
 				if manager.Logger() != nil && manager.Debug() {
-					manager.Logger().Debug("Middleware [Auth ]: internal validate")
+					manager.Logger().Debug("Middleware [Auth ]: inside validate")
 				}
-				user, err = manager.Provider().GetValidTokenUser(appId, token)
+				user, err = manager.Provider().GetTokenUser(appId, token)
 			}
 
 			if err != nil {

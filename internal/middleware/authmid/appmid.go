@@ -11,6 +11,7 @@ import (
 )
 
 // 1. 内部验证， 则通过header中的X-App-Id,去app服务获取相关的app信息和验证
+// 2. 外部验证， 则通过header中的X-App-Id,去app服务获取相关的app信息不进行验证
 
 // NewAppMid app middleware
 func NewAppMid(manager *authedapp.Manager) gin.HandlerFunc {
@@ -18,21 +19,23 @@ func NewAppMid(manager *authedapp.Manager) gin.HandlerFunc {
 		rqId := c.Request.Header.Get("X-Request-Id")
 		var app authedapp.App
 		var err error
+		var validate bool
 		// validate outside, then decode the app stream
 		if manager.OutsideValidate() {
 			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [ App ]: outside validate")
 			}
-			appSteam := c.Request.Header.Get(manager.OutsideHandler().Key)
-			app, err = manager.OutsideHandler().Decode([]byte(appSteam))
+			validate = false
 		} else {
 			// validate internal, fetch the app from provider
 			if manager.Logger() != nil && manager.Debug() {
-				manager.Logger().Debug("Middleware [ App ]: internal validate")
+				manager.Logger().Debug("Middleware [ App ]: inside validate")
 			}
-			appId := c.Request.Header.Get("X-App-Id")
-			app, err = manager.Provider().GetValidApp(appId, manager.Project, !manager.OutsideValidate(), manager.Backend)
+			validate = true
 		}
+
+		appId := c.Request.Header.Get("X-App-Id")
+		app, err = manager.Provider().GetValidApp(appId, manager.Project, validate, manager.Backend)
 
 		if err != nil {
 			if manager.Logger() != nil && manager.Debug() {

@@ -6,21 +6,22 @@ import (
 	"go.uber.org/zap"
 )
 
+/*
+说明：
+1. 内部验证， 即内部通过rpc验证X-App-Id的真实性，并得到详情
+2. 外部验证， 即网关层先验证X-App-Id的真实性，内部只是查询该id的详情
+*/
+
 // Manager authed app manager
 type Manager struct {
-	Project        string
-	debug          dynamic.Bool
-	Backend        bool
-	outsideHandler *OutsideHandler
-	apps           map[string]App
-	provider       AppProvider
-	errObjProvider errobj.Provider
-	logger         *zap.Logger
-}
-
-type OutsideHandler struct {
-	Key    string
-	Decode func([]byte) (App, error)
+	Project         string
+	debug           dynamic.Bool
+	Backend         bool
+	outsideValidate bool
+	apps            map[string]App
+	provider        AppProvider
+	errObjProvider  errobj.Provider
+	logger          *zap.Logger
 }
 
 // AppProvider app provider interface
@@ -35,6 +36,7 @@ type App interface {
 	Name() string
 	Backend() bool
 	Scope() []string
+	Manage() bool
 	Attr(attr string) (interface{}, bool)
 }
 
@@ -50,15 +52,8 @@ func New(project string, provider AppProvider, errObjProvider errobj.Provider, b
 	}
 }
 
-// NewOutside return an outside authed app manager
-func NewOutside(project string, provider *OutsideHandler, errObjProvider errobj.Provider, debug dynamic.Bool) *Manager {
-	return &Manager{
-		Project:        project,
-		debug:          debug,
-		apps:           make(map[string]App),
-		errObjProvider: errObjProvider,
-		outsideHandler: provider,
-	}
+func (m *Manager) Outside() {
+	m.outsideValidate = true
 }
 
 // Add an authed app for request id
@@ -102,9 +97,5 @@ func (m *Manager) Debug() bool {
 }
 
 func (m *Manager) OutsideValidate() bool {
-	return m.outsideHandler != nil
-}
-
-func (m *Manager) OutsideHandler() *OutsideHandler {
-	return m.outsideHandler
+	return m.outsideValidate
 }

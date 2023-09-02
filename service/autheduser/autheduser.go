@@ -9,19 +9,14 @@ import (
 
 // Manager authed user manager
 type Manager struct {
-	Backend        bool
-	outsideHandler *OutsideHandler
-	debug          dynamic.Bool
-	users          map[string]User
-	provider       UserProvider
-	errObjProvider errobj.Provider
-	authManager    *authroute.Manager
-	logger         *zap.Logger
-}
-
-type OutsideHandler struct {
-	Key    string
-	Decode func([]byte) (User, error)
+	Backend         bool
+	outsideValidate bool
+	debug           dynamic.Bool
+	users           map[string]User
+	provider        UserProvider
+	errObjProvider  errobj.Provider
+	authManager     *authroute.Manager
+	logger          *zap.Logger
 }
 
 // User interface
@@ -29,14 +24,14 @@ type User interface {
 	Id() uint32
 	Uid() string
 	Name() string
+	Backend() bool
 	Attr(attr string) (interface{}, bool)
 }
 
 // UserProvider User provider interface
 type UserProvider interface {
-	GetValidTokenUser(appid, token string) (User, error)
-	GetValidUser(uid string) (User, error)
-	GetJwtKey(appid, uid string) (string, error)
+	GetTokenUser(appid, token string) (User, error)
+	GetIdUser(uid string) (User, error)
 }
 
 // New return an authed user manager
@@ -51,14 +46,8 @@ func New(provider UserProvider, errObjProvider errobj.Provider, authManager *aut
 	}
 }
 
-func NewOutside(provider *OutsideHandler, errObjProvider errobj.Provider, authManager *authroute.Manager, debug dynamic.Bool) *Manager {
-	return &Manager{
-		users:          make(map[string]User),
-		outsideHandler: provider,
-		errObjProvider: errObjProvider,
-		authManager:    authManager,
-		debug:          debug,
-	}
+func (m *Manager) Outside() {
+	m.outsideValidate = true
 }
 
 // Add an authed app for request id
@@ -107,9 +96,5 @@ func (m *Manager) Logger() *zap.Logger {
 }
 
 func (m *Manager) OutsideValidate() bool {
-	return m.outsideHandler != nil
-}
-
-func (m *Manager) OutsideHandler() *OutsideHandler {
-	return m.outsideHandler
+	return m.outsideValidate
 }
