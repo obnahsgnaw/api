@@ -37,7 +37,7 @@ type App interface {
 	Backend() bool
 	Scope() []string
 	Manage() bool
-	Attr(attr string) (interface{}, bool)
+	Attr(attr string) (string, bool)
 }
 
 // New return an authed app manager

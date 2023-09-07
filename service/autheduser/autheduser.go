@@ -25,7 +25,7 @@ type User interface {
 	Uid() string
 	Name() string
 	Backend() bool
-	Attr(attr string) (interface{}, bool)
+	Attr(attr string) (string, bool)
 }
 
 // UserProvider User provider interface

@@ -12,6 +12,8 @@ import (
 func main() {
 	app := application.New("demo", "Demo")
 
+	defer app.Release()
+
 	s := api.New(app, "auth", "auth", endtype.Backend, "/auth", url.Host{Ip: "127.0.0.1", Port: 8001}, 1)
 
 	s.WithRpcServer(8002)
