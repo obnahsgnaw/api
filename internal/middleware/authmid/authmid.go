@@ -33,7 +33,7 @@ func NewMuxAuthBeforeMid(manager *autheduser.Manager) service.MuxRouteHandleFunc
 					manager.Logger().Debug("Middleware [Auth ]: outside validate")
 				}
 				uid := r.Header.Get("X-User-Id")
-				user, err = manager.Provider().GetIdUser(uid)
+				user, err = manager.Provider().GetIdUser(appId, uid)
 			} else {
 				// validate inside, fetch the token user from provider
 				if manager.Logger() != nil && manager.Debug() {
