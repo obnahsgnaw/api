@@ -31,7 +31,7 @@ type User interface {
 // UserProvider User provider interface
 type UserProvider interface {
 	GetTokenUser(appid, token string) (User, error)
-	GetIdUser(uid string) (User, error)
+	GetIdUser(appid, uid string) (User, error)
 }
 
 // New return an authed user manager
