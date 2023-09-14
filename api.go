@@ -356,10 +356,13 @@ func (s *Server) WithDocService(config *apidoc.Config) {
 	s.debug("withed doc service")
 }
 
-func (s *Server) WithRpcServer(port int) *rpc.Server {
+func (s *Server) WithRpcServer(port int, autoAdd bool) *rpc.Server {
 	s.rps = rpc.New(s.app, s.id, s.name, s.et, url.Host{Ip: s.host.Ip, Port: port}, rpc.Parent(s), rpc.RegEnable())
-	s.app.AddServer(s.rps)
-	s.debug("withed api rpc server")
+	if autoAdd {
+		s.app.AddServer(s.rps)
+		s.debug("withed api rpc server")
+	}
+
 	return s.rps
 }
 
