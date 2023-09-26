@@ -34,7 +34,7 @@ func NewAppMid(manager *authedapp.Manager) gin.HandlerFunc {
 			validate = true
 		}
 
-		appId := c.Request.Header.Get("X-App-Id")
+		appId := c.Request.Header.Get(manager.GetHeaderKey())
 		app, err = manager.Provider().GetValidApp(appId, manager.Project, validate, manager.Backend)
 
 		if err != nil {
@@ -57,7 +57,7 @@ func NewAppMid(manager *authedapp.Manager) gin.HandlerFunc {
 			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [ App ]: id=" + app.AppId())
 			}
-			c.Request.Header.Set("X-App-Id", app.AppId())
+			c.Request.Header.Set(manager.GetHeaderKey(), app.AppId())
 			manager.Add(rqId, app)
 		}
 

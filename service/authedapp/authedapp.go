@@ -22,6 +22,7 @@ type Manager struct {
 	provider        AppProvider
 	errObjProvider  errobj.Provider
 	logger          *zap.Logger
+	headerKey       string
 }
 
 // AppProvider app provider interface
@@ -98,4 +99,15 @@ func (m *Manager) Debug() bool {
 
 func (m *Manager) OutsideValidate() bool {
 	return m.outsideValidate
+}
+
+func (m *Manager) SetHeaderKey(key string) {
+	m.headerKey = key
+}
+func (m *Manager) GetHeaderKey() string {
+	if m.headerKey == "" {
+		return "X-App-Id"
+	}
+
+	return m.headerKey
 }

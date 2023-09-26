@@ -17,6 +17,9 @@ type Manager struct {
 	errObjProvider  errobj.Provider
 	authManager     *authroute.Manager
 	logger          *zap.Logger
+	appIdHeaderKey  string
+	userIdHeaderKey string
+	tokenHeaderKey  string
 }
 
 // User interface
@@ -97,4 +100,37 @@ func (m *Manager) Logger() *zap.Logger {
 
 func (m *Manager) OutsideValidate() bool {
 	return m.outsideValidate
+}
+
+func (m *Manager) SetAppIdHeaderKey(key string) {
+	m.appIdHeaderKey = key
+}
+func (m *Manager) GetAppIdHeaderKey() string {
+	if m.appIdHeaderKey == "" {
+		return "X-App-Id"
+	}
+
+	return m.appIdHeaderKey
+}
+
+func (m *Manager) SetUserIdHeaderKey(key string) {
+	m.userIdHeaderKey = key
+}
+func (m *Manager) GetUserIdHeaderKey() string {
+	if m.userIdHeaderKey == "" {
+		return "X-User-Id"
+	}
+
+	return m.userIdHeaderKey
+}
+
+func (m *Manager) SetTokenHeaderKey(key string) {
+	m.tokenHeaderKey = key
+}
+func (m *Manager) GetTokenHeaderKey() string {
+	if m.tokenHeaderKey == "" {
+		return "Authorization"
+	}
+
+	return m.tokenHeaderKey
 }
