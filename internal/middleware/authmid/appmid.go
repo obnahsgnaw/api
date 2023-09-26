@@ -20,21 +20,23 @@ func NewAppMid(manager *authedapp.Manager) gin.HandlerFunc {
 		var app authedapp.App
 		var err error
 		var validate bool
+		var appId string
 		// validate outside, then decode the app stream
 		if manager.OutsideValidate() {
 			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [ App ]: outside validate")
 			}
 			validate = false
+			appId = c.Request.Header.Get(manager.GetAuthedAppidHeaderKey())
 		} else {
 			// validate internal, fetch the app from provider
 			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [ App ]: inside validate")
 			}
 			validate = true
+			appId = c.Request.Header.Get(manager.GetAppidHeaderKey())
 		}
 
-		appId := c.Request.Header.Get(manager.GetHeaderKey())
 		app, err = manager.Provider().GetValidApp(appId, manager.Project, validate, manager.Backend)
 
 		if err != nil {
@@ -57,7 +59,7 @@ func NewAppMid(manager *authedapp.Manager) gin.HandlerFunc {
 			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [ App ]: id=" + app.AppId())
 			}
-			c.Request.Header.Set(manager.GetHeaderKey(), app.AppId())
+			c.Request.Header.Set(manager.GetAuthedAppidHeaderKey(), app.AppId())
 			manager.Add(rqId, app)
 		}
 
