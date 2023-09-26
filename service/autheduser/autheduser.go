@@ -10,7 +10,7 @@ import (
 // Manager authed user manager
 type Manager struct {
 	Backend         bool
-	outsideValidate bool
+	outsideValidate func() bool
 	debug           dynamic.Bool
 	users           map[string]User
 	provider        UserProvider
@@ -49,8 +49,8 @@ func New(provider UserProvider, errObjProvider errobj.Provider, authManager *aut
 	}
 }
 
-func (m *Manager) Outside() {
-	m.outsideValidate = true
+func (m *Manager) Outside(cb func() bool) {
+	m.outsideValidate = cb
 }
 
 // Add an authed app for request id
@@ -99,7 +99,10 @@ func (m *Manager) Logger() *zap.Logger {
 }
 
 func (m *Manager) OutsideValidate() bool {
-	return m.outsideValidate
+	if m.outsideValidate == nil {
+		return false
+	}
+	return m.outsideValidate()
 }
 
 func (m *Manager) SetAppIdHeaderKey(key string) {

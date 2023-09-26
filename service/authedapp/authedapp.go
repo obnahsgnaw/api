@@ -17,7 +17,7 @@ type Manager struct {
 	Project          string
 	debug            dynamic.Bool
 	Backend          bool
-	outsideValidate  bool
+	outsideValidate  func() bool
 	apps             map[string]App
 	provider         AppProvider
 	errObjProvider   errobj.Provider
@@ -54,8 +54,8 @@ func New(project string, provider AppProvider, errObjProvider errobj.Provider, b
 	}
 }
 
-func (m *Manager) Outside() {
-	m.outsideValidate = true
+func (m *Manager) Outside(cb func() bool) {
+	m.outsideValidate = cb
 }
 
 // Add an authed app for request id
@@ -99,7 +99,10 @@ func (m *Manager) Debug() bool {
 }
 
 func (m *Manager) OutsideValidate() bool {
-	return m.outsideValidate
+	if m.outsideValidate == nil {
+		return false
+	}
+	return m.outsideValidate()
 }
 
 func (m *Manager) SetAppidHeaderKey(key string) {
