@@ -14,15 +14,16 @@ import (
 
 // Manager authed app manager
 type Manager struct {
-	Project         string
-	debug           dynamic.Bool
-	Backend         bool
-	outsideValidate bool
-	apps            map[string]App
-	provider        AppProvider
-	errObjProvider  errobj.Provider
-	logger          *zap.Logger
-	headerKey       string
+	Project          string
+	debug            dynamic.Bool
+	Backend          bool
+	outsideValidate  bool
+	apps             map[string]App
+	provider         AppProvider
+	errObjProvider   errobj.Provider
+	logger           *zap.Logger
+	appIdBfHeaderKey string
+	appIdAfHeaderKey string
 }
 
 // AppProvider app provider interface
@@ -101,13 +102,23 @@ func (m *Manager) OutsideValidate() bool {
 	return m.outsideValidate
 }
 
-func (m *Manager) SetHeaderKey(key string) {
-	m.headerKey = key
+func (m *Manager) SetAppidHeaderKey(key string) {
+	m.appIdBfHeaderKey = key
 }
-func (m *Manager) GetHeaderKey() string {
-	if m.headerKey == "" {
+func (m *Manager) SetAuthedAppidHeaderKey(key string) {
+	m.appIdAfHeaderKey = key
+}
+func (m *Manager) GetAppidHeaderKey() string {
+	if m.appIdBfHeaderKey == "" {
 		return "X-App-Id"
 	}
 
-	return m.headerKey
+	return m.appIdBfHeaderKey
+}
+func (m *Manager) GetAuthedAppidHeaderKey() string {
+	if m.appIdAfHeaderKey == "" {
+		return "X-App-Id"
+	}
+
+	return m.appIdAfHeaderKey
 }
