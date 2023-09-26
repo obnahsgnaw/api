@@ -19,8 +19,8 @@ func NewMuxAuthBeforeMid(manager *autheduser.Manager) service.MuxRouteHandleFunc
 		method := r.Method
 		uri := pattern
 		rqId := r.Header.Get("X-Request-ID")
-		appId := r.Header.Get("X-App-Id")
-		token := r.Header.Get("Authorization")
+		appId := r.Header.Get(manager.GetAppIdHeaderKey())
+		token := r.Header.Get(manager.GetTokenHeaderKey())
 		if manager.AuthedRouteManager().AuthMust(method, uri) {
 			if manager.Logger() != nil && manager.Debug() {
 				manager.Logger().Debug("Middleware [Auth ]: " + method + ":" + uri)
@@ -32,7 +32,7 @@ func NewMuxAuthBeforeMid(manager *autheduser.Manager) service.MuxRouteHandleFunc
 				if manager.Logger() != nil && manager.Debug() {
 					manager.Logger().Debug("Middleware [Auth ]: outside validate")
 				}
-				uid := r.Header.Get("X-User-Id")
+				uid := r.Header.Get(manager.GetUserIdHeaderKey())
 				user, err = manager.Provider().GetIdUser(appId, uid)
 			} else {
 				// validate inside, fetch the token user from provider
@@ -61,7 +61,7 @@ func NewMuxAuthBeforeMid(manager *autheduser.Manager) service.MuxRouteHandleFunc
 				if manager.Logger() != nil && manager.Debug() {
 					manager.Logger().Debug("Middleware [Auth ]: user " + strconv.Itoa(int(user.Id())))
 				}
-				r.Header.Set("X-User-Id", user.Uid())
+				r.Header.Set(manager.GetUserIdHeaderKey(), user.Uid())
 			}
 			manager.Add(rqId, user)
 		} else {
