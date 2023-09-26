@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/middleware/authmid"
-	"github.com/obnahsgnaw/api/internal/middleware/corsmid"
+	"github.com/obnahsgnaw/api/pkg/corsmid"
 	"github.com/obnahsgnaw/api/pkg/errobj"
 	"github.com/obnahsgnaw/api/service"
 	"github.com/obnahsgnaw/api/service/cors"

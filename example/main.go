@@ -16,7 +16,7 @@ func main() {
 
 	s := api.New(app, "auth", "auth", endtype.Backend, "/auth", url.Host{Ip: "127.0.0.1", Port: 8001}, 1)
 
-	s.WithRpcServer(8002)
+	s.WithRpcServer(8002, true)
 
 	s.WithDocService(&apidoc.Config{
 		Protocol: url.HTTP,
