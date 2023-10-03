@@ -1,22 +1,15 @@
 package autheduser
 
 import (
-	"github.com/obnahsgnaw/api/internal/server/authroute"
-	"github.com/obnahsgnaw/api/pkg/errobj"
-	"github.com/obnahsgnaw/application/pkg/dynamic"
 	"go.uber.org/zap"
 )
 
 // Manager authed user manager
 type Manager struct {
-	Backend         bool
-	outsideValidate func() bool
-	debug           dynamic.Bool
-	users           map[string]User
 	provider        UserProvider
-	errObjProvider  errobj.Provider
-	authManager     *authroute.Manager
 	logger          *zap.Logger
+	users           map[string]User
+	outsideValidate func() bool
 	appIdHeaderKey  string
 	userIdHeaderKey string
 	tokenHeaderKey  string
@@ -38,19 +31,17 @@ type UserProvider interface {
 }
 
 // New return an authed user manager
-func New(provider UserProvider, errObjProvider errobj.Provider, authManager *authroute.Manager, backend bool, debug dynamic.Bool) *Manager {
+func New(provider UserProvider) *Manager {
 	return &Manager{
-		Backend:        backend,
-		users:          make(map[string]User),
-		provider:       provider,
-		errObjProvider: errObjProvider,
-		authManager:    authManager,
-		debug:          debug,
+		users:    make(map[string]User),
+		provider: provider,
+		outsideValidate: func() bool {
+			return false
+		},
+		appIdHeaderKey:  "X-App-Id",
+		userIdHeaderKey: "X-User-Id",
+		tokenHeaderKey:  "Authorization",
 	}
-}
-
-func (m *Manager) Outside(cb func() bool) {
-	m.outsideValidate = cb
 }
 
 // Add an authed app for request id
@@ -76,64 +67,31 @@ func (m *Manager) Provider() UserProvider {
 	return m.provider
 }
 
-func (m *Manager) Debug() bool {
-	return m.debug.Val()
-}
-
-// ErrObjProvider return err obj provider
-func (m *Manager) ErrObjProvider() errobj.Provider {
-	return m.errObjProvider
-}
-
-// AuthedRouteManager return auth route manager
-func (m *Manager) AuthedRouteManager() *authroute.Manager {
-	return m.authManager
-}
-
-func (m *Manager) SetLogger(logger *zap.Logger) {
-	m.logger = logger
-}
-
-func (m *Manager) Logger() *zap.Logger {
-	return m.logger
+func (m *Manager) SetOutsideValidate(cb func() bool) {
+	m.outsideValidate = cb
 }
 
 func (m *Manager) OutsideValidate() bool {
-	if m.outsideValidate == nil {
-		return false
-	}
 	return m.outsideValidate()
 }
 
 func (m *Manager) SetAppIdHeaderKey(key string) {
 	m.appIdHeaderKey = key
 }
-func (m *Manager) GetAppIdHeaderKey() string {
-	if m.appIdHeaderKey == "" {
-		return "X-App-Id"
-	}
-
+func (m *Manager) AppIdHeaderKey() string {
 	return m.appIdHeaderKey
 }
 
 func (m *Manager) SetUserIdHeaderKey(key string) {
 	m.userIdHeaderKey = key
 }
-func (m *Manager) GetUserIdHeaderKey() string {
-	if m.userIdHeaderKey == "" {
-		return "X-User-Id"
-	}
-
+func (m *Manager) UserIdHeaderKey() string {
 	return m.userIdHeaderKey
 }
 
 func (m *Manager) SetTokenHeaderKey(key string) {
 	m.tokenHeaderKey = key
 }
-func (m *Manager) GetTokenHeaderKey() string {
-	if m.tokenHeaderKey == "" {
-		return "Authorization"
-	}
-
+func (m *Manager) TokenHeaderKey() string {
 	return m.tokenHeaderKey
 }

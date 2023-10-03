@@ -7,15 +7,15 @@ import (
 var (
 	None              = newCommonErrCode(0, "success")
 	InternalError     = newCommonErrCode(1, "internal error")
-	ValidateFailed    = newCommonErrCode(2, "validate failed")
+	ValidateFailed    = newCommonErrCode(2, "invalid arguments")
 	ConflictError     = newCommonErrCode(3, "operate conflict")
-	AppMidInvalid     = newCommonErrCode(11, "app id error")
-	AuthMidInvalid    = newCommonErrCode(12, "token error")
-	CryptMidDecFailed = newCommonErrCode(13, "decrypt error")
-	CryptMidEncFailed = newCommonErrCode(14, "encrypt error")
-	SignMidInvalid    = newCommonErrCode(15, "permission error")
-	SignMidGenFailed  = newCommonErrCode(16, "permission error")
-	PermMidNoPerm     = newCommonErrCode(17, "permission error")
+	AppMidInvalid     = newCommonErrCode(11, "application identify invalid")
+	AuthMidInvalid    = newCommonErrCode(12, "authorization token invalid")
+	CryptMidDecFailed = newCommonErrCode(13, "data decrypt failed")
+	CryptMidEncFailed = newCommonErrCode(14, "data encrypt failed")
+	SignMidInvalid    = newCommonErrCode(15, "signature invalid")
+	SignMidGenFailed  = newCommonErrCode(16, "signature generate failed")
+	PermMidNoPerm     = newCommonErrCode(17, "no permission")
 )
 
 // ErrCode 错误码

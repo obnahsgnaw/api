@@ -35,6 +35,7 @@ type HttpConfig struct {
 	ExtRoutes      []service.RouteProvider
 	ErrObjProvider errobj.Provider
 	Debugger       debug.Debugger
+	RouteDebug     bool
 }
 
 func NewEngine(cnf *EngineConfig) (*gin.Engine, error) {
@@ -83,7 +84,9 @@ func NewEngine(cnf *EngineConfig) (*gin.Engine, error) {
 	}
 
 	if cnf.Cors != nil {
-		r.Use(corsmid.NewCorsMid(cnf.Cors))
+		r.Use(corsmid.NewCorsMid(func() *cors.Config {
+			return cnf.Cors
+		}))
 	}
 	r.Use(authmid.NewRqIdMid())
 
@@ -96,7 +99,7 @@ func NewRpcHttpProxyServer(cnf *HttpConfig) (e *gin.Engine, mux *runtime.ServeMu
 
 	// 初始gin
 	if e, err = NewEngine(&EngineConfig{
-		Debug:          cnf.Debugger.Debug(),
+		Debug:          cnf.RouteDebug,
 		AccessWriter:   cnf.AccessWriter,
 		ErrWriter:      cnf.ErrWriter,
 		TrustedProxies: cnf.TrustedProxies,

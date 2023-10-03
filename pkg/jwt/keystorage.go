@@ -12,6 +12,12 @@ func jwtStoreError(msg string, err error) error {
 	return utils.TitledError("jwt key storage error", msg, err)
 }
 
+var keyPrefix string
+
+func SetKeyPrefix(prefix string) {
+	keyPrefix = prefix
+}
+
 // GetUserJwtKey get user jwt key
 func GetUserJwtKey(rds *redis.Client, subject string, id string) (string, error) {
 	ck := tokenCacheKey(subject, id)
@@ -53,5 +59,8 @@ func DelUserJwtKey(rds *redis.Client, subject, id string) error {
 }
 
 func tokenCacheKey(subject, id string) string {
+	if keyPrefix != "" {
+		return strings.Join([]string{keyPrefix, `tokens`, subject, id}, ":")
+	}
 	return strings.Join([]string{`tokens`, subject, id}, ":")
 }

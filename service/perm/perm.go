@@ -1,47 +1,37 @@
 package perm
 
-import (
-	"github.com/obnahsgnaw/api/pkg/errobj"
-	"github.com/obnahsgnaw/application/pkg/dynamic"
-	"go.uber.org/zap"
-)
-
 type Provider interface {
 	Can(appid, uid, method, pattern string) error
 }
 
 type Manager struct {
-	debug          dynamic.Bool
-	provider       Provider
-	logger         *zap.Logger
-	errObjProvider errobj.Provider
+	provider        Provider
+	appIdHeaderKey  string
+	userIdHeaderKey string
 }
 
-func New(p Provider, ebj errobj.Provider, debug dynamic.Bool) *Manager {
+func New(p Provider) *Manager {
 	return &Manager{
-		debug:          debug,
-		provider:       p,
-		logger:         nil,
-		errObjProvider: ebj,
+		provider:        p,
+		appIdHeaderKey:  "X-App-Id",
+		userIdHeaderKey: "X-User-Id",
 	}
-}
-
-func (m *Manager) SetLogger(logger *zap.Logger) {
-	m.logger = logger
-}
-
-func (m *Manager) Logger() *zap.Logger {
-	return m.logger
-}
-
-func (m *Manager) Debug() bool {
-	return m.debug.Val()
 }
 
 func (m *Manager) Provider() Provider {
 	return m.provider
 }
 
-func (m *Manager) ErrObjProvider() errobj.Provider {
-	return m.errObjProvider
+func (m *Manager) SetAppIdHeaderKey(key string) {
+	m.appIdHeaderKey = key
+}
+func (m *Manager) AppIdHeaderKey() string {
+	return m.appIdHeaderKey
+}
+
+func (m *Manager) SetUserIdHeaderKey(key string) {
+	m.userIdHeaderKey = key
+}
+func (m *Manager) UserIdHeaderKey() string {
+	return m.userIdHeaderKey
 }

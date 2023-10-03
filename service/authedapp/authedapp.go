@@ -1,11 +1,5 @@
 package authedapp
 
-import (
-	"github.com/obnahsgnaw/api/pkg/errobj"
-	"github.com/obnahsgnaw/application/pkg/dynamic"
-	"go.uber.org/zap"
-)
-
 /*
 说明：
 1. 内部验证， 即内部通过rpc验证X-App-Id的真实性，并得到详情
@@ -15,20 +9,16 @@ import (
 // Manager authed app manager
 type Manager struct {
 	Project          string
-	debug            dynamic.Bool
-	Backend          bool
-	outsideValidate  func() bool
-	apps             map[string]App
 	provider         AppProvider
-	errObjProvider   errobj.Provider
-	logger           *zap.Logger
+	apps             map[string]App
+	outsideValidate  func() bool
 	appIdBfHeaderKey string
 	appIdAfHeaderKey string
 }
 
 // AppProvider app provider interface
 type AppProvider interface {
-	GetValidApp(id, project string, validate, backend bool) (app App, err error)
+	GetValidApp(id, project string, validate bool) (app App, err error)
 }
 
 // App interface
@@ -43,19 +33,17 @@ type App interface {
 }
 
 // New return an authed app manager
-func New(project string, provider AppProvider, errObjProvider errobj.Provider, backend bool, debug dynamic.Bool) *Manager {
+func New(project string, provider AppProvider) *Manager {
 	return &Manager{
-		Project:        project,
-		Backend:        backend,
-		debug:          debug,
-		apps:           make(map[string]App),
-		provider:       provider,
-		errObjProvider: errObjProvider,
+		Project:  project,
+		provider: provider,
+		apps:     make(map[string]App),
+		outsideValidate: func() bool {
+			return false
+		},
+		appIdBfHeaderKey: "X-App-Id",
+		appIdAfHeaderKey: "X-App-Id",
 	}
-}
-
-func (m *Manager) Outside(cb func() bool) {
-	m.outsideValidate = cb
 }
 
 // Add an authed app for request id
@@ -81,47 +69,28 @@ func (m *Manager) Provider() AppProvider {
 	return m.provider
 }
 
-// ErrObjProvider return err obj provider
-func (m *Manager) ErrObjProvider() errobj.Provider {
-	return m.errObjProvider
-}
-
-func (m *Manager) SetLogger(logger *zap.Logger) {
-	m.logger = logger
-}
-
-func (m *Manager) Logger() *zap.Logger {
-	return m.logger
-}
-
-func (m *Manager) Debug() bool {
-	return m.debug.Val()
+func (m *Manager) SetOutsideValidate(cb func() bool) {
+	if cb != nil {
+		m.outsideValidate = cb
+	}
 }
 
 func (m *Manager) OutsideValidate() bool {
-	if m.outsideValidate == nil {
-		return false
-	}
 	return m.outsideValidate()
 }
 
 func (m *Manager) SetAppidHeaderKey(key string) {
 	m.appIdBfHeaderKey = key
 }
+
+func (m *Manager) AppidHeaderKey() string {
+	return m.appIdBfHeaderKey
+}
+
 func (m *Manager) SetAuthedAppidHeaderKey(key string) {
 	m.appIdAfHeaderKey = key
 }
-func (m *Manager) GetAppidHeaderKey() string {
-	if m.appIdBfHeaderKey == "" {
-		return "X-App-Id"
-	}
 
-	return m.appIdBfHeaderKey
-}
-func (m *Manager) GetAuthedAppidHeaderKey() string {
-	if m.appIdAfHeaderKey == "" {
-		return "X-App-Id"
-	}
-
+func (m *Manager) AuthedAppidHeaderKey() string {
 	return m.appIdAfHeaderKey
 }
