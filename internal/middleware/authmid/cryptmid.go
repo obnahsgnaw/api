@@ -7,8 +7,6 @@ import (
 	"github.com/obnahsgnaw/api/internal/marshaler"
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/service/crypt"
-	"github.com/obnahsgnaw/application/pkg/debug"
-	"github.com/obnahsgnaw/application/pkg/dynamic"
 	"io"
 )
 
@@ -22,31 +20,25 @@ func (w BodyWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-func NewCryptMid(manager *crypt.Manager) gin.HandlerFunc {
+func NewCryptMid(manager *crypt.Manager, debugCb func(msg string)) gin.HandlerFunc {
+	if debugCb == nil {
+		debugCb = func(msg string) {}
+	}
 	return func(c *gin.Context) {
-		appId := c.GetHeader("X-App-Id")
-		userId := c.GetHeader("X-User-Id")
-		iv := c.GetHeader("X-User-Iv")
+		appId := c.GetHeader(manager.AppIdHeaderKey())
+		userId := c.GetHeader(manager.UserIdHeaderKey())
+		iv := c.GetHeader(manager.UserIvHeaderKey())
 		body, _ := io.ReadAll(c.Request.Body)
-		if manager.Logger() != nil && manager.Debug() {
-			manager.Logger().Debug("Middleware [Crypt]: Body In=" + string(body))
-		}
+		debugCb("crypt-middleware: body in=" + string(body))
 		// 解密
 		decrypted, err := manager.Provider().Decrypt(appId, userId, []byte(iv), body)
 		if err != nil {
-			if manager.Logger() != nil && manager.Debug() {
-				manager.Logger().Debug("Middleware [Crypt ]: decrypt failed, err=" + err.Error())
-			}
+			debugCb("crypt-middleware: decrypt failed, err=" + err.Error())
 			c.Abort()
-			errhandler.HandlerErr(
+			errhandler.DefaultErrorHandler(
 				apierr.ToStatusError(apierr.NewBadRequestError(apierr.CryptMidDecFailed, err)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
-				nil,
-				manager.ErrObjProvider(),
-				debug.New(dynamic.NewBool(func() bool {
-					return manager.Debug()
-				})),
 			)
 			return
 		}
@@ -62,25 +54,16 @@ func NewCryptMid(manager *crypt.Manager) gin.HandlerFunc {
 		encrypted, err := manager.Provider().Encrypt(appId, userId, []byte(iv), bdWriter.body.Bytes())
 		if err != nil {
 			bdWriter.body = bytes.NewBufferString("")
-			if manager.Logger() != nil && manager.Debug() {
-				manager.Logger().Debug("Middleware [Crypt ]: encrypt failed, err=" + err.Error())
-			}
+			debugCb("crypt-middleware: encrypt failed, err=" + err.Error())
 			c.Abort()
-			errhandler.HandlerErr(
+			errhandler.DefaultErrorHandler(
 				apierr.ToStatusError(apierr.NewInternalError(apierr.CryptMidEncFailed, err)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
-				nil,
-				manager.ErrObjProvider(),
-				debug.New(dynamic.NewBool(func() bool {
-					return manager.Debug()
-				})),
 			)
 			return
 		}
 		bdWriter.body = bytes.NewBuffer(encrypted)
-		if manager.Logger() != nil && manager.Debug() {
-			manager.Logger().Debug("Middleware [Crypt]: Body Out=" + bdWriter.body.String())
-		}
+		debugCb("crypt-middleware: body out=" + bdWriter.body.String())
 	}
 }

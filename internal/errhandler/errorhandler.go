@@ -8,6 +8,7 @@ import (
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/pkg/errobj"
 	"github.com/obnahsgnaw/application/pkg/debug"
+	"github.com/obnahsgnaw/application/pkg/dynamic"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
@@ -18,11 +19,35 @@ import (
 	"strings"
 )
 
+var defErrObjProvider errobj.Provider
+var defDebugger debug.Debugger
+
+func SetDefaultErrObjProvider(provider errobj.Provider) {
+	defErrObjProvider = provider
+}
+
+func SetDefaultDebugger(debugger2 debug.Debugger) {
+	defDebugger = debugger2
+}
+
 func OutgoingHeaderMatcher(key string) (string, bool) {
 	if key == "StatusCode" {
 		return key, true
 	}
 	return fmt.Sprintf("%s%s", runtime.MetadataHeaderPrefix, key), true
+}
+
+func DefaultErrorHandler(err error, marshaler runtime.Marshaler, w http.ResponseWriter) {
+	if defErrObjProvider == nil {
+		panic("default error object provider not set")
+	}
+	if defDebugger == nil {
+		defDebugger = debug.New(dynamic.NewBool(func() bool {
+			return true
+		}))
+	}
+
+	HandlerErr(err, marshaler, w, nil, defErrObjProvider, defDebugger)
 }
 
 func HandlerErr(err error, marshaler runtime.Marshaler, w http.ResponseWriter, ext func(), p errobj.Provider, debugger debug.Debugger) {

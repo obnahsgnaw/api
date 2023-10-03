@@ -6,13 +6,19 @@ import (
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/endtype"
 	"github.com/obnahsgnaw/application/pkg/url"
-	"log"
 )
 
 func main() {
-	app := application.New("demo", "Demo")
-
+	app := application.New(application.NewCluster("dev", "Dev"), "apiDemo")
 	defer app.Release()
+
+	app.With(application.Debug(func() bool {
+		return true
+	}))
+
+	//errhandler.SetDefaultDebugger()
+	//errhandler.SetDefaultErrObjProvider()
+	//jwt.SetKeyPrefix()
 
 	s := api.New(app, "auth", "auth", endtype.Backend, "/auth", url.Host{Ip: "127.0.0.1", Port: 8001}, 1)
 
@@ -38,5 +44,5 @@ func main() {
 		panic(err)
 	})
 
-	log.Printf("Exited")
+	app.Wait()
 }

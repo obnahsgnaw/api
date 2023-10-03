@@ -41,38 +41,53 @@ func Cors(c *cors.Config) Option {
 }
 func AppMiddleware(m *authedapp.Manager) Option {
 	return func(s *Server) {
-		s.debug("withed app middleware")
-		s.AddMiddleware(authmid.NewAppMid(m))
+		s.AddMiddleware(authmid.NewAppMid(m, func(msg string) {
+			s.debug(msg)
+		}))
+		s.debug("app middleware enabled")
 	}
 }
 func CryptMiddleware(m *crypt.Manager) Option {
 	return func(s *Server) {
-		s.debug("withed crypt middleware")
-		s.AddMiddleware(authmid.NewCryptMid(m))
+		s.AddMiddleware(authmid.NewCryptMid(m, func(msg string) {
+			s.debug(msg)
+		}))
+		s.debug("crypt middleware enabled")
 	}
 }
 func AuthMiddleware(m *autheduser.Manager) Option {
 	return func(s *Server) {
-		s.debug("withed auth middleware")
-		s.AddMuxMiddleware(authmid.NewMuxAuthBeforeMid(m))
-		s.AddMiddleware(authmid.NewAuthAfterMid(m))
+		s.AddMiddleware(authmid.NewAuthMid(m, func(msg string) {
+			s.debug(msg)
+		}))
+		s.debug("auth middleware enabled")
 	}
 }
 func SignMiddleware(m *sign.Manager) Option {
 	return func(s *Server) {
-		s.debug("withed signature middleware")
-		s.AddMiddleware(authmid.NewSignMid(m))
+		s.AddMiddleware(authmid.NewSignMid(m, func(msg string) {
+			s.debug(msg)
+		}))
+		s.debug("signature middleware enabled")
 	}
 }
 func PermMiddleware(m *perm.Manager) Option {
 	return func(s *Server) {
-		s.debug("withed permission middleware")
-		s.AddMuxMiddleware(permmid.NewMuxPermissionMid(m))
+		s.AddMuxMiddleware(permmid.NewMuxPermissionMid(m, func(msg string) {
+			s.debug(msg)
+		}))
+		s.debug("permission middleware enabled")
 	}
 }
 func Gateway(keyGen func() (string, error)) Option {
 	return func(s *Server) {
-		s.debug("withed gateway")
 		s.gatewayKeyGen = keyGen
+		s.debug("gateway enabled")
+	}
+}
+func RouteDebug(debug bool) Option {
+	return func(s *Server) {
+		s.debug("route debug enabled")
+		s.routeDebug = debug
 	}
 }
