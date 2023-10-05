@@ -3,11 +3,12 @@ package authmid
 import (
 	"bytes"
 	"github.com/gin-gonic/gin"
-	"github.com/obnahsgnaw/api/internal/errhandler"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/marshaler"
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/service/crypt"
 	"io"
+	"net/http"
 )
 
 type BodyWriter struct {
@@ -20,7 +21,7 @@ func (w BodyWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-func NewCryptMid(manager *crypt.Manager, debugCb func(msg string)) gin.HandlerFunc {
+func NewCryptMid(manager *crypt.Manager, debugCb func(msg string), errHandle func(err error, marshaler runtime.Marshaler, w http.ResponseWriter)) gin.HandlerFunc {
 	if debugCb == nil {
 		debugCb = func(msg string) {}
 	}
@@ -35,7 +36,7 @@ func NewCryptMid(manager *crypt.Manager, debugCb func(msg string)) gin.HandlerFu
 		if err != nil {
 			debugCb("crypt-middleware: decrypt failed, err=" + err.Error())
 			c.Abort()
-			errhandler.DefaultErrorHandler(
+			errHandle(
 				apierr.ToStatusError(apierr.NewBadRequestError(apierr.CryptMidDecFailed, err)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
@@ -56,7 +57,7 @@ func NewCryptMid(manager *crypt.Manager, debugCb func(msg string)) gin.HandlerFu
 			bdWriter.body = bytes.NewBufferString("")
 			debugCb("crypt-middleware: encrypt failed, err=" + err.Error())
 			c.Abort()
-			errhandler.DefaultErrorHandler(
+			errHandle(
 				apierr.ToStatusError(apierr.NewInternalError(apierr.CryptMidEncFailed, err)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,

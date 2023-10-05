@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/obnahsgnaw/api/internal/middleware/authmid"
 	"github.com/obnahsgnaw/api/internal/middleware/permmid"
+	"github.com/obnahsgnaw/api/pkg/errobj"
 	"github.com/obnahsgnaw/api/service/authedapp"
 	"github.com/obnahsgnaw/api/service/autheduser"
 	"github.com/obnahsgnaw/api/service/cors"
@@ -43,7 +44,7 @@ func AppMiddleware(m *authedapp.Manager) Option {
 	return func(s *Server) {
 		s.AddMiddleware(authmid.NewAppMid(m, func(msg string) {
 			s.debug(msg)
-		}))
+		}, s.ErrorHandler()))
 		s.debug("app middleware enabled")
 	}
 }
@@ -51,7 +52,7 @@ func CryptMiddleware(m *crypt.Manager) Option {
 	return func(s *Server) {
 		s.AddMiddleware(authmid.NewCryptMid(m, func(msg string) {
 			s.debug(msg)
-		}))
+		}, s.ErrorHandler()))
 		s.debug("crypt middleware enabled")
 	}
 }
@@ -59,7 +60,7 @@ func AuthMiddleware(m *autheduser.Manager) Option {
 	return func(s *Server) {
 		s.AddMiddleware(authmid.NewAuthMid(m, func(msg string) {
 			s.debug(msg)
-		}))
+		}, s.ErrorHandler()))
 		s.debug("auth middleware enabled")
 	}
 }
@@ -67,7 +68,7 @@ func SignMiddleware(m *sign.Manager) Option {
 	return func(s *Server) {
 		s.AddMiddleware(authmid.NewSignMid(m, func(msg string) {
 			s.debug(msg)
-		}))
+		}, s.ErrorHandler()))
 		s.debug("signature middleware enabled")
 	}
 }
@@ -75,7 +76,7 @@ func PermMiddleware(m *perm.Manager) Option {
 	return func(s *Server) {
 		s.AddMuxMiddleware(permmid.NewMuxPermissionMid(m, func(msg string) {
 			s.debug(msg)
-		}))
+		}, s.ErrorHandler()))
 		s.debug("permission middleware enabled")
 	}
 }
@@ -89,5 +90,10 @@ func RouteDebug(debug bool) Option {
 	return func(s *Server) {
 		s.debug("route debug enabled")
 		s.routeDebug = debug
+	}
+}
+func ErrObjProvider(p errobj.Provider) Option {
+	return func(s *Server) {
+		s.errObjProvider = p
 	}
 }

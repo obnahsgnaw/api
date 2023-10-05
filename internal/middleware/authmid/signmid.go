@@ -3,16 +3,17 @@ package authmid
 import (
 	"errors"
 	"github.com/gin-gonic/gin"
-	"github.com/obnahsgnaw/api/internal/errhandler"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/marshaler"
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/service/sign"
+	"net/http"
 	"strings"
 )
 
 // if validate outside, then not user the mid
 
-func NewSignMid(manager *sign.Manager, debugCb func(msg string)) gin.HandlerFunc {
+func NewSignMid(manager *sign.Manager, debugCb func(msg string), errHandle func(err error, marshaler runtime.Marshaler, w http.ResponseWriter)) gin.HandlerFunc {
 	if debugCb == nil {
 		debugCb = func(msg string) {}
 	}
@@ -28,7 +29,7 @@ func NewSignMid(manager *sign.Manager, debugCb func(msg string)) gin.HandlerFunc
 		if err != nil {
 			debugCb("sign-middleware: validate failed, err=" + err.Error())
 			c.Abort()
-			errhandler.DefaultErrorHandler(
+			errHandle(
 				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidInvalid, err)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
@@ -39,7 +40,7 @@ func NewSignMid(manager *sign.Manager, debugCb func(msg string)) gin.HandlerFunc
 		if err = manager.Provider().Validate(appId, userId, method, uri, s, t, n); err != nil {
 			debugCb("sign-middleware: validate failed, err=" + err.Error())
 			c.Abort()
-			errhandler.DefaultErrorHandler(
+			errHandle(
 				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidInvalid, err)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
@@ -51,7 +52,7 @@ func NewSignMid(manager *sign.Manager, debugCb func(msg string)) gin.HandlerFunc
 		if s1, t1, n1, err1 := manager.Provider().Generate(appId, userId, method, uri); err1 != nil {
 			debugCb("sign-middleware: gen failed, err=" + err1.Error())
 			c.Abort()
-			errhandler.DefaultErrorHandler(
+			errHandle(
 				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidGenFailed, err1)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
