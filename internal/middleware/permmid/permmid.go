@@ -1,7 +1,7 @@
 package permmid
 
 import (
-	"github.com/obnahsgnaw/api/internal/errhandler"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/marshaler"
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/service"
@@ -11,7 +11,7 @@ import (
 )
 
 // NewMuxPermissionMid 需要拿pattern来确定权限，所以没放到gin中间件
-func NewMuxPermissionMid(manager *perm.Manager, debugCb func(msg string)) service.MuxRouteHandleFunc {
+func NewMuxPermissionMid(manager *perm.Manager, debugCb func(msg string), errHandle func(err error, marshaler runtime.Marshaler, w http.ResponseWriter)) service.MuxRouteHandleFunc {
 	if debugCb == nil {
 		debugCb = func(msg string) {}
 	}
@@ -23,7 +23,7 @@ func NewMuxPermissionMid(manager *perm.Manager, debugCb func(msg string)) servic
 		// 验证权限
 		if err = manager.Provider().Can(appId, userId, method, pattern); err != nil {
 			debugCb("perm-middleware: no perm, desc=" + err.Error())
-			errhandler.DefaultErrorHandler(
+			errHandle(
 				apierr.ToStatusError(apierr.NewForbiddenError(apierr.PermMidNoPerm, err)),
 				marshaler.GetMarshaler(r.Header.Get("Accept")),
 				w,

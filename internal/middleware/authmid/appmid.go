@@ -2,17 +2,18 @@ package authmid
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/obnahsgnaw/api/internal/errhandler"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/marshaler"
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/service/authedapp"
+	"net/http"
 )
 
 // 1. 内部验证， 则通过header中的X-App-Id,去app服务获取相关的app信息和验证
 // 2. 外部验证， 则通过header中的X-App-Id,去app服务获取相关的app信息不进行验证
 
 // NewAppMid app middleware
-func NewAppMid(manager *authedapp.Manager, debugCb func(msg string)) gin.HandlerFunc {
+func NewAppMid(manager *authedapp.Manager, debugCb func(msg string), errHandle func(err error, marshaler runtime.Marshaler, w http.ResponseWriter)) gin.HandlerFunc {
 	if debugCb == nil {
 		debugCb = func(msg string) {}
 	}
@@ -39,7 +40,7 @@ func NewAppMid(manager *authedapp.Manager, debugCb func(msg string)) gin.Handler
 		if err != nil {
 			debugCb("app-middleware: validate failed,err=" + err.Error())
 			c.Abort()
-			errhandler.DefaultErrorHandler(
+			errHandle(
 				apierr.ToStatusError(apierr.NewUnauthorizedError(apierr.AppMidInvalid, err)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,

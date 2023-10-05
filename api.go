@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/obnahsgnaw/api/internal/errhandler"
 	"github.com/obnahsgnaw/api/internal/server"
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/pkg/errobj"
@@ -21,6 +22,7 @@ import (
 	"github.com/obnahsgnaw/rpc"
 	"go.uber.org/zap"
 	"io"
+	"net/http"
 	"strings"
 )
 
@@ -300,6 +302,12 @@ func (s *Server) WithRpcServer(port int, autoAdd bool) *rpc.Server {
 	}
 
 	return s.rps
+}
+
+func (s *Server) ErrorHandler() func(err error, marshaler runtime.Marshaler, w http.ResponseWriter) {
+	return func(err error, marshaler runtime.Marshaler, w http.ResponseWriter) {
+		errhandler.HandlerErr(err, marshaler, w, nil, s.errObjProvider, s.app.Debugger())
+	}
 }
 
 func (s *Server) debug(msg string) {
