@@ -1,4 +1,12 @@
 
+<a name="v0.27.4"></a>
+## [v0.27.4](https://8.140.161.172/wangsb/wgateway/compare/v0.27.3...v0.27.4) (2023-12-15)
+
+### Bug Fixes
+
+* **go.mod:** update dpes to fix log
+
+
 <a name="v0.27.3"></a>
 ## [v0.27.3](https://8.140.161.172/wangsb/wgateway/compare/v0.27.2...v0.27.3) (2023-12-15)
 
