@@ -32,11 +32,11 @@ func main() {
 	//errhandler.SetDefaultErrObjProvider()
 	//jwt.SetKeyPrefix()
 
-	s := api.New(app, "auth", "auth", endtype.Backend, "/auth", url.Host{Ip: "127.0.0.1", Port: 8001}, 1)
+	s := api.New(app, "auth", "auth", endtype.Backend, "/auth", 1)
+	s.With(api.DefaultEngine(url.Host{Ip: "127.0.0.1", Port: 8001}))
+	s.With(api.RpcServer(8002, true))
 
-	s.WithRpcServer(8002, true)
-
-	s.WithDocService(&apidoc.Config{
+	s.With(api.DocService(&apidoc.Config{
 		Protocol: url.HTTP,
 		Path:     "/doc",
 		Title:    "认证",
@@ -48,7 +48,7 @@ func main() {
 			Host:     url.Host{Ip: "127.0.0.1", Port: 8001},
 		},
 		EndType: endtype.Backend,
-	})
+	}))
 
 	app.AddServer(s)
 
