@@ -14,6 +14,7 @@ import (
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/endtype"
 	"github.com/obnahsgnaw/application/pkg/logging/logger"
+	"github.com/obnahsgnaw/application/pkg/logging/writer"
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/application/regtype"
@@ -113,12 +114,28 @@ func New(app *application.Application, id, name string, et endtype.EndType, path
 	}
 	s.With(options...)
 	if s.accessWriter == nil && s.logCnf != nil {
-		s.accessWriter, err = logger.NewAccessWriter(s.logCnf, s.app.Debugger().Debug())
-		s.addErr(err)
+		var wts []io.Writer
+		if w, err := logger.NewAccessWriter(s.logCnf, s.app.Debugger().Debug()); err == nil {
+			wts = append(wts, w)
+		} else {
+			s.addErr(err)
+		}
+		if s.app.Debugger().Debug() {
+			wts = append(wts, writer.NewStdWriter())
+		}
+		s.accessWriter = newMultiWriter(wts...)
 	}
 	if s.errWriter == nil && s.logCnf != nil {
-		s.errWriter, err = logger.NewErrorWriter(s.logCnf, s.app.Debugger().Debug())
-		s.addErr(err)
+		var wts []io.Writer
+		if w, err := logger.NewErrorWriter(s.logCnf, s.app.Debugger().Debug()); err == nil {
+			wts = append(wts, w)
+		} else {
+			s.addErr(err)
+		}
+		if s.app.Debugger().Debug() {
+			wts = append(wts, writer.NewStdWriter())
+		}
+		s.accessWriter = newMultiWriter(wts...)
 	}
 	return s
 }
@@ -244,6 +261,7 @@ func (s *Server) Run(failedCb func(error)) {
 			extRoutes = append(extRoutes, m())
 		}
 		s.engine, s.mux, err = server.NewRpcHttpProxyServer(&server.HttpConfig{
+			Name:           utils.ToStr(s.et.String(), "-", s.id),
 			PathPrefix:     s.pathPrefix,
 			AccessWriter:   s.accessWriter,
 			ErrWriter:      s.errWriter,
