@@ -111,11 +111,15 @@ func NewRpcHttpProxyServer(cnf *HttpConfig) (e *gin.Engine, mux *runtime.ServeMu
 	// 设置路由
 	e.GET(prefix, gin.WrapH(mux))
 	// 设置其他路由
-	for _, rp := range cnf.ExtRoutes {
-		rp(e)
-	}
+	AddExtRoute(e, cnf.ExtRoutes)
 	// 代理到rpc
 	e.Group(strings.TrimSuffix(prefix, "/")+"/*gw", cnf.Middlewares...).Any("", gin.WrapH(mux))
 
 	return
+}
+
+func AddExtRoute(e *gin.Engine, routes []service.RouteProvider) {
+	for _, rp := range routes {
+		rp(e)
+	}
 }

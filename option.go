@@ -1,15 +1,20 @@
 package api
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/middleware/authmid"
 	"github.com/obnahsgnaw/api/internal/middleware/permmid"
 	"github.com/obnahsgnaw/api/pkg/errobj"
+	"github.com/obnahsgnaw/api/service"
+	"github.com/obnahsgnaw/api/service/apidoc"
 	"github.com/obnahsgnaw/api/service/authedapp"
 	"github.com/obnahsgnaw/api/service/autheduser"
 	"github.com/obnahsgnaw/api/service/cors"
 	"github.com/obnahsgnaw/api/service/crypt"
 	"github.com/obnahsgnaw/api/service/perm"
 	"github.com/obnahsgnaw/api/service/sign"
+	"github.com/obnahsgnaw/rpc"
 	"io"
 )
 
@@ -42,58 +47,87 @@ func Cors(c *cors.Config) Option {
 }
 func AppMiddleware(m *authedapp.Manager) Option {
 	return func(s *Server) {
-		s.AddMiddleware(authmid.NewAppMid(m, func(msg string) {
-			s.debug(msg)
-		}, s.ErrorHandler()))
-		s.debug("app middleware enabled")
+		s.AddMiddleware(func() gin.HandlerFunc {
+			s.logger.Debug("app middleware enabled")
+			return authmid.NewAppMid(m, func(msg string) {
+				s.logger.Debug(msg)
+			}, s.ErrorHandler())
+		})
 	}
 }
 func CryptMiddleware(m *crypt.Manager) Option {
 	return func(s *Server) {
-		s.AddMiddleware(authmid.NewCryptMid(m, func(msg string) {
-			s.debug(msg)
-		}, s.ErrorHandler()))
-		s.debug("crypt middleware enabled")
+		s.AddMiddleware(func() gin.HandlerFunc {
+			s.logger.Debug("crypt middleware enabled")
+			return authmid.NewCryptMid(m, func(msg string) {
+				s.logger.Debug(msg)
+			}, s.ErrorHandler())
+		})
 	}
 }
 func AuthMiddleware(m *autheduser.Manager) Option {
 	return func(s *Server) {
-		s.AddMiddleware(authmid.NewAuthMid(m, func(msg string) {
-			s.debug(msg)
-		}, s.ErrorHandler()))
-		s.debug("auth middleware enabled")
+		s.AddMiddleware(func() gin.HandlerFunc {
+			s.logger.Debug("auth middleware enabled")
+			return authmid.NewAuthMid(m, func(msg string) {
+				s.logger.Debug(msg)
+			}, s.ErrorHandler())
+		})
 	}
 }
 func SignMiddleware(m *sign.Manager) Option {
 	return func(s *Server) {
-		s.AddMiddleware(authmid.NewSignMid(m, func(msg string) {
-			s.debug(msg)
-		}, s.ErrorHandler()))
-		s.debug("signature middleware enabled")
+		s.AddMiddleware(func() gin.HandlerFunc {
+			s.logger.Debug("signature middleware enabled")
+			return authmid.NewSignMid(m, func(msg string) {
+				s.logger.Debug(msg)
+			}, s.ErrorHandler())
+		})
 	}
 }
 func PermMiddleware(m *perm.Manager) Option {
 	return func(s *Server) {
-		s.AddMuxMiddleware(permmid.NewMuxPermissionMid(m, func(msg string) {
-			s.debug(msg)
-		}, s.ErrorHandler()))
-		s.debug("permission middleware enabled")
+		s.AddMuxMiddleware(func() service.MuxRouteHandleFunc {
+			s.logger.Debug("permission middleware enabled")
+			return permmid.NewMuxPermissionMid(m, func(msg string) {
+				s.logger.Debug(msg)
+			}, s.ErrorHandler())
+		})
 	}
 }
 func Gateway(keyGen func() (string, error)) Option {
 	return func(s *Server) {
 		s.gatewayKeyGen = keyGen
-		s.debug("gateway enabled")
 	}
 }
 func RouteDebug(debug bool) Option {
 	return func(s *Server) {
-		s.debug("route debug enabled")
 		s.routeDebug = debug
 	}
 }
 func ErrObjProvider(p errobj.Provider) Option {
 	return func(s *Server) {
 		s.errObjProvider = p
+	}
+}
+func Engine(e *gin.Engine, mux *runtime.ServeMux) Option {
+	return func(s *Server) {
+		s.engine = e
+		s.mux = mux
+	}
+}
+func WithDocService(config *apidoc.Config) Option {
+	return func(s *Server) {
+		s.WithDocService(config)
+	}
+}
+func WithRpcServer(port int, autoAdd bool) Option {
+	return func(s *Server) {
+		s.WithRpcServer(port, autoAdd)
+	}
+}
+func WithRpcServerIns(ins *rpc.Server, autoAdd bool) Option {
+	return func(s *Server) {
+		s.WithRpcServerIns(ins, autoAdd)
 	}
 }
