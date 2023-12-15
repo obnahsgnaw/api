@@ -16,6 +16,7 @@ import (
 )
 
 type EngineConfig struct {
+	Name           string
 	Debug          bool
 	AccessWriter   io.Writer
 	ErrWriter      io.Writer
@@ -24,6 +25,7 @@ type EngineConfig struct {
 }
 
 type HttpConfig struct {
+	Name           string
 	PathPrefix     string
 	AccessWriter   io.Writer
 	ErrWriter      io.Writer
@@ -60,10 +62,11 @@ func NewEngine(cnf *EngineConfig) (*gin.Engine, error) {
 	if cnf.AccessWriter != nil {
 		r.Use(gin.LoggerWithConfig(gin.LoggerConfig{
 			Formatter: func(param gin.LogFormatterParams) string {
-				return fmt.Sprintf("[ %s ] - %s %s %s %d %s %v %s %s\n",
+				return fmt.Sprintf("[ %s ] - %s %s %s %s %d %s %v %s %s\n",
 					param.TimeStamp.Format(time.RFC3339),
 					param.ClientIP,
 					param.Method,
+					cnf.Name,
 					param.Path,
 					param.StatusCode,
 					param.Latency,
@@ -99,6 +102,7 @@ func NewRpcHttpProxyServer(cnf *HttpConfig) (e *gin.Engine, mux *runtime.ServeMu
 
 	// 初始gin
 	if e, err = NewEngine(&EngineConfig{
+		Name:           cnf.Name,
 		Debug:          cnf.RouteDebug,
 		AccessWriter:   cnf.AccessWriter,
 		ErrWriter:      cnf.ErrWriter,
