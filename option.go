@@ -14,6 +14,7 @@ import (
 	"github.com/obnahsgnaw/api/service/crypt"
 	"github.com/obnahsgnaw/api/service/perm"
 	"github.com/obnahsgnaw/api/service/sign"
+	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/rpc"
 	"io"
 )
@@ -110,24 +111,33 @@ func ErrObjProvider(p errobj.Provider) Option {
 		s.errObjProvider = p
 	}
 }
-func Engine(e *gin.Engine, mux *runtime.ServeMux) Option {
+func Engine(e *gin.Engine, mux *runtime.ServeMux, ehost url.Host) Option {
 	return func(s *Server) {
 		s.engine = e
 		s.mux = mux
+		s.engineCus = true
+		s.host = ehost
+		s.initRegInfo()
 	}
 }
-func WithDocService(config *apidoc.Config) Option {
+func DefaultEngine(host url.Host) Option {
 	return func(s *Server) {
-		s.WithDocService(config)
+		s.host = host
+		s.initRegInfo()
 	}
 }
-func WithRpcServer(port int, autoAdd bool) Option {
+func DocService(config *apidoc.Config) Option {
 	return func(s *Server) {
-		s.WithRpcServer(port, autoAdd)
+		s.withDocService(config)
 	}
 }
-func WithRpcServerIns(ins *rpc.Server, autoAdd bool) Option {
+func RpcServer(port int, autoAdd bool) Option {
 	return func(s *Server) {
-		s.WithRpcServerIns(ins, autoAdd)
+		s.withRpcServer(port, autoAdd)
+	}
+}
+func RpcServerIns(ins *rpc.Server, autoAdd bool) Option {
+	return func(s *Server) {
+		s.withRpcServerIns(ins, autoAdd)
 	}
 }

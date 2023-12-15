@@ -36,6 +36,7 @@ type Server struct {
 	et             endtype.EndType
 	app            *application.Application
 	engine         *gin.Engine
+	engineCus      bool
 	mux            *runtime.ServeMux
 	services       []ServiceProvider
 	regEnable      bool
@@ -66,7 +67,7 @@ type Server struct {
 // ServiceProvider api service provider
 type ServiceProvider func(ctx context.Context, mux *runtime.ServeMux) (name string, err error)
 
-func New(app *application.Application, id, name string, et endtype.EndType, pathPrefix string, host url.Host, errCodePrefix int, options ...Option) *Server {
+func New(app *application.Application, id, name string, et endtype.EndType, pathPrefix string, errCodePrefix int, options ...Option) *Server {
 	var err error
 	s := &Server{
 		id:         id,
@@ -76,7 +77,6 @@ func New(app *application.Application, id, name string, et endtype.EndType, path
 		app:        app,
 		errFactory: apierr.New(errCodePrefix),
 		pathPrefix: strings.TrimPrefix(pathPrefix, "/"),
-		host:       host,
 		errObjProvider: func(param errobj.Param) interface{} {
 			return param
 		},
@@ -84,9 +84,6 @@ func New(app *application.Application, id, name string, et endtype.EndType, path
 	}
 	if s.id == "" || s.name == "" {
 		s.addErr(s.apiServerError(s.msg("id name invalid"), nil))
-	}
-	if s.host.Port <= 0 || s.host.Ip == "" {
-		s.addErr(s.apiServerError(s.msg("host invalid"), nil))
 	}
 	if s.pathPrefix == "" {
 		s.addErr(s.apiServerError(s.msg("path prefix empty"), nil))
@@ -98,20 +95,6 @@ func New(app *application.Application, id, name string, et endtype.EndType, path
 	}
 	s.logger, err = logger.New(utils.ToStr("api:", s.et.String(), "-", s.id), s.logCnf, s.app.Debugger().Debug())
 	s.addErr(err)
-	s.regInfo = &regCenter.RegInfo{
-		AppId:   app.ID(),
-		RegType: regtype.Http,
-		ServerInfo: regCenter.ServerInfo{
-			Id:      s.id,
-			Name:    s.name,
-			EndType: s.et.String(),
-			Type:    s.st.String(),
-		},
-		Host:      s.host.String(),
-		Val:       s.host.String(),
-		Ttl:       s.app.RegTtl(),
-		KeyPreGen: regCenter.DefaultRegKeyPrefixGenerator(),
-	}
 	s.With(options...)
 	if s.accessWriter == nil && s.logCnf != nil {
 		var wts []io.Writer
@@ -245,9 +228,13 @@ func (s *Server) Run(failedCb func(error)) {
 	s.logger.Info("init start...")
 	if s.rps != nil && s.rpsAdd {
 		s.app.AddServer(s.rps)
-		s.logger.Debug("api rpc service enabled")
+		s.logger.Debug("api doc service enabled")
 	}
 	if s.engine == nil {
+		if s.host.Port <= 0 || s.host.Ip == "" {
+			s.addErr(s.apiServerError(s.msg("host invalid"), nil))
+			return
+		}
 		var mid []gin.HandlerFunc
 		for _, m := range s.middlewares {
 			mid = append(mid, m())
@@ -311,12 +298,31 @@ func (s *Server) Run(failedCb func(error)) {
 	}
 	s.logger.Info("register initialized")
 	s.logger.Info("initialized")
-	go func(host string, engine *gin.Engine) {
-		if err = engine.Run(host); err != nil {
-			failedCb(s.apiServerError(s.msg("engine run failed, err="+err.Error()), nil))
-		}
-	}(s.host.String(), s.engine)
-	s.logger.Info(utils.ToStr("server[", s.Host().String(), "] listen and serving..."))
+	if !s.engineCus {
+		go func(host string, engine *gin.Engine) {
+			if err = engine.Run(host); err != nil {
+				failedCb(s.apiServerError(s.msg("engine run failed, err="+err.Error()), nil))
+			}
+		}(s.host.String(), s.engine)
+		s.logger.Info(utils.ToStr("server[", s.Host().String(), "] listen and serving..."))
+	}
+}
+
+func (s *Server) initRegInfo() {
+	s.regInfo = &regCenter.RegInfo{
+		AppId:   s.app.ID(),
+		RegType: regtype.Http,
+		ServerInfo: regCenter.ServerInfo{
+			Id:      s.id,
+			Name:    s.name,
+			EndType: s.et.String(),
+			Type:    s.st.String(),
+		},
+		Host:      s.host.String(),
+		Val:       s.host.String(),
+		Ttl:       s.app.RegTtl(),
+		KeyPreGen: regCenter.DefaultRegKeyPrefixGenerator(),
+	}
 }
 
 func (s *Server) RefreshGateway() error {
@@ -337,14 +343,13 @@ func (s *Server) Release() {
 	}
 }
 
-func (s *Server) WithDocService(config *apidoc.Config) {
+func (s *Server) withDocService(config *apidoc.Config) {
 	if config.EndType == "" {
 		config.EndType = endtype.Backend
 	}
 	if config.Path == "" {
 		config.Path = "/doc"
 	}
-	config.Path = "/" + s.id + "-docs/" + strings.TrimPrefix(config.Path, "/")
 	config.SetOrigin(url.Origin{
 		Protocol: config.Protocol,
 		Host: url.Host{
@@ -377,20 +382,24 @@ func (s *Server) WithDocService(config *apidoc.Config) {
 	s.docRegInfos = append(s.docRegInfos, docRegInfo)
 	s.AddRoute(func() service.RouteProvider {
 		s.logger.Debug("api doc service enabled")
+		if s.engineCus {
+			config.Path = "/" + s.id + "-docs/" + strings.TrimPrefix(config.Path, "/")
+		}
 		return server.DocRoute(config.Path, config.Provider)
 	})
 }
 
-func (s *Server) WithRpcServer(port int, autoAdd bool) *rpc.Server {
+func (s *Server) withRpcServer(port int, autoAdd bool) *rpc.Server {
 	s.rps = rpc.New(s.app, s.id, s.name, s.et, url.Host{Ip: s.host.Ip, Port: port}, rpc.Parent(s), rpc.RegEnable())
 	s.rpsAdd = autoAdd
 
 	return s.rps
 }
 
-func (s *Server) WithRpcServerIns(ins *rpc.Server, autoAdd bool) *rpc.Server {
+func (s *Server) withRpcServerIns(ins *rpc.Server, autoAdd bool) *rpc.Server {
 	s.rps = ins
 	s.rpsAdd = autoAdd
+	s.rps.AddRegInfo(s.id, s.name, s)
 
 	return s.rps
 }
