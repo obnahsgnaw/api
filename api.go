@@ -10,16 +10,15 @@ import (
 	"github.com/obnahsgnaw/api/pkg/errobj"
 	"github.com/obnahsgnaw/api/service"
 	"github.com/obnahsgnaw/api/service/apidoc"
-	"github.com/obnahsgnaw/api/service/cors"
 	"github.com/obnahsgnaw/application"
 	"github.com/obnahsgnaw/application/endtype"
 	"github.com/obnahsgnaw/application/pkg/logging/logger"
-	"github.com/obnahsgnaw/application/pkg/logging/writer"
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/application/pkg/utils"
 	"github.com/obnahsgnaw/application/regtype"
 	"github.com/obnahsgnaw/application/servertype"
 	"github.com/obnahsgnaw/application/service/regCenter"
+	"github.com/obnahsgnaw/http/cors"
 	"github.com/obnahsgnaw/rpc"
 	"go.uber.org/zap"
 	"io"
@@ -90,36 +89,12 @@ func New(app *application.Application, id, name string, et endtype.EndType, path
 	}
 	s.logCnf = logger.CopyCnfWithLevel(s.app.LogConfig())
 	if s.logCnf != nil {
-		s.logCnf.AddSubDir(filepath.Join(s.et.String(), "api-"+s.id))
-		s.logCnf.SetFilename(s.id)
+		s.logCnf.AddSubDir(filepath.Join(s.et.String(), utils.ToStr(s.st.String(), "-", s.id)))
+		s.logCnf.SetFilename(utils.ToStr(s.st.String(), "-", s.id))
 	}
-	s.logger, err = logger.New(utils.ToStr("api:", s.et.String(), "-", s.id), s.logCnf, s.app.Debugger().Debug())
+	s.logger, err = logger.New(utils.ToStr(s.st.String(), ":", s.et.String(), "-", s.id), s.logCnf, s.app.Debugger().Debug())
 	s.addErr(err)
 	s.With(options...)
-	if s.accessWriter == nil && s.logCnf != nil {
-		var wts []io.Writer
-		if w, err := logger.NewAccessWriter(s.logCnf, s.app.Debugger().Debug()); err == nil {
-			wts = append(wts, w)
-		} else {
-			s.addErr(err)
-		}
-		if s.app.Debugger().Debug() {
-			wts = append(wts, writer.NewStdWriter())
-		}
-		s.accessWriter = newMultiWriter(wts...)
-	}
-	if s.errWriter == nil && s.logCnf != nil {
-		var wts []io.Writer
-		if w, err := logger.NewErrorWriter(s.logCnf, s.app.Debugger().Debug()); err == nil {
-			wts = append(wts, w)
-		} else {
-			s.addErr(err)
-		}
-		if s.app.Debugger().Debug() {
-			wts = append(wts, writer.NewStdWriter())
-		}
-		s.accessWriter = newMultiWriter(wts...)
-	}
 	return s
 }
 
@@ -228,7 +203,7 @@ func (s *Server) Run(failedCb func(error)) {
 	s.logger.Info("init start...")
 	if s.rps != nil && s.rpsAdd {
 		s.app.AddServer(s.rps)
-		s.logger.Debug("api doc service enabled")
+		s.logger.Debug("api rpc service enabled")
 	}
 	if s.engine == nil {
 		if s.host.Port <= 0 || s.host.Ip == "" {
@@ -261,6 +236,7 @@ func (s *Server) Run(failedCb func(error)) {
 			ErrObjProvider: s.errObjProvider,
 			Debugger:       s.app.Debugger(),
 			RouteDebug:     s.routeDebug,
+			LogCnf:         s.logCnf,
 		})
 		if err != nil {
 			failedCb(s.apiServerError(s.msg("new engine failed"), err))
@@ -382,7 +358,8 @@ func (s *Server) withDocService(config *apidoc.Config) {
 	s.docRegInfos = append(s.docRegInfos, docRegInfo)
 	s.AddRoute(func() service.RouteProvider {
 		s.logger.Debug("api doc service enabled")
-		if s.engineCus {
+		// 外部引擎或者手动指定增加前缀，则增加id前缀便于多个id的服务同一注册到一个引擎上
+		if s.engineCus || config.Prefixed {
 			config.Path = "/" + s.id + "-docs/" + strings.TrimPrefix(config.Path, "/")
 		}
 		return server.DocRoute(config.Path, config.Provider)
@@ -415,14 +392,15 @@ func (s *Server) msg(msg ...string) string {
 }
 
 func (s *Server) register(reg bool) error {
+	var cb = func(msg string) { s.logger.Debug(msg) }
 	// reg http
 	if s.regEnable {
 		if reg {
-			if err := s.app.DoRegister(s.regInfo); err != nil {
+			if err := s.app.DoRegister(s.regInfo, cb); err != nil {
 				return err
 			}
 		} else {
-			if err := s.app.DoUnregister(s.regInfo); err != nil {
+			if err := s.app.DoUnregister(s.regInfo, cb); err != nil {
 				return err
 			}
 		}
@@ -432,11 +410,11 @@ func (s *Server) register(reg bool) error {
 	if len(s.docRegInfos) > 0 {
 		for _, docRegInfo := range s.docRegInfos {
 			if reg {
-				if err := s.app.DoRegister(docRegInfo); err != nil {
+				if err := s.app.DoRegister(docRegInfo, cb); err != nil {
 					return err
 				}
 			} else {
-				if err := s.app.DoUnregister(docRegInfo); err != nil {
+				if err := s.app.DoUnregister(docRegInfo, cb); err != nil {
 					return err
 				}
 			}
