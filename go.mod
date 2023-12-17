@@ -7,9 +7,9 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v4 v4.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0
-	github.com/obnahsgnaw/application v0.15.15
+	github.com/obnahsgnaw/application v0.15.16
 	github.com/obnahsgnaw/http v0.0.1
-	github.com/obnahsgnaw/rpc v0.4.11
+	github.com/obnahsgnaw/rpc v0.4.12
 	go.uber.org/zap v1.23.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc
 	google.golang.org/grpc v1.55.0
