@@ -10,11 +10,11 @@ import (
 	"github.com/obnahsgnaw/api/service/apidoc"
 	"github.com/obnahsgnaw/api/service/authedapp"
 	"github.com/obnahsgnaw/api/service/autheduser"
-	"github.com/obnahsgnaw/api/service/cors"
 	"github.com/obnahsgnaw/api/service/crypt"
 	"github.com/obnahsgnaw/api/service/perm"
 	"github.com/obnahsgnaw/api/service/sign"
 	"github.com/obnahsgnaw/application/pkg/url"
+	"github.com/obnahsgnaw/http/cors"
 	"github.com/obnahsgnaw/rpc"
 	"io"
 )

@@ -7,8 +7,9 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v4 v4.3.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0
-	github.com/obnahsgnaw/application v0.15.14
-	github.com/obnahsgnaw/rpc v0.4.10
+	github.com/obnahsgnaw/application v0.15.15
+	github.com/obnahsgnaw/http v0.0.1
+	github.com/obnahsgnaw/rpc v0.4.11
 	go.uber.org/zap v1.23.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc
 	google.golang.org/grpc v1.55.0
@@ -16,8 +17,6 @@ require (
 )
 
 replace github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 => github.com/obnahsgnaw/grpc-gateway/v2 v2.16.0
-
-replace github.com/obnahsgnaw/rpc v0.4.10 => ../rpc // TODO delete
 
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
