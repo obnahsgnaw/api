@@ -33,8 +33,8 @@ type App interface {
 }
 
 // New return an authed app manager
-func New(project string, provider AppProvider) *Manager {
-	return &Manager{
+func New(project string, provider AppProvider, o ...Option) *Manager {
+	s := &Manager{
 		Project:  project,
 		provider: provider,
 		apps:     make(map[string]App),
@@ -44,6 +44,8 @@ func New(project string, provider AppProvider) *Manager {
 		appIdBfHeaderKey: "X-App-Id",
 		appIdAfHeaderKey: "X-App-Id",
 	}
+	s.With(o...)
+	return s
 }
 
 // Add an authed app for request id
@@ -69,26 +71,12 @@ func (m *Manager) Provider() AppProvider {
 	return m.provider
 }
 
-func (m *Manager) SetOutsideValidate(cb func() bool) {
-	if cb != nil {
-		m.outsideValidate = cb
-	}
-}
-
 func (m *Manager) OutsideValidate() bool {
 	return m.outsideValidate()
 }
 
-func (m *Manager) SetAppidHeaderKey(key string) {
-	m.appIdBfHeaderKey = key
-}
-
 func (m *Manager) AppidHeaderKey() string {
 	return m.appIdBfHeaderKey
-}
-
-func (m *Manager) SetAuthedAppidHeaderKey(key string) {
-	m.appIdAfHeaderKey = key
 }
 
 func (m *Manager) AuthedAppidHeaderKey() string {
