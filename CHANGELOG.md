@@ -1,4 +1,12 @@
 
+<a name="v0.27.9"></a>
+## [v0.27.9](https://8.140.161.172/wangsb/wgateway/compare/v0.27.8...v0.27.9) (2023-12-19)
+
+### Bug Fixes
+
+* **go.mod:** fix http deps
+
+
 <a name="v0.27.8"></a>
 ## [v0.27.8](https://8.140.161.172/wangsb/wgateway/compare/v0.27.7...v0.27.8) (2023-12-19)
 
