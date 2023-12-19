@@ -12,13 +12,15 @@ type Manager struct {
 	userIvHeaderKey string
 }
 
-func New(provider Provider) *Manager {
-	return &Manager{
+func New(provider Provider, o ...Option) *Manager {
+	s := &Manager{
 		provider:        provider,
 		appIdHeaderKey:  "X-App-Id",
 		userIdHeaderKey: "X-User-Id",
 		userIvHeaderKey: "X-User-Iv",
 	}
+	s.With(o...)
+	return s
 }
 
 // Provider return crypt provider
@@ -26,23 +28,14 @@ func (m *Manager) Provider() Provider {
 	return m.provider
 }
 
-func (m *Manager) SetAppIdHeaderKey(key string) {
-	m.appIdHeaderKey = key
-}
 func (m *Manager) AppIdHeaderKey() string {
 	return m.appIdHeaderKey
 }
 
-func (m *Manager) SetUserIdHeaderKey(key string) {
-	m.userIdHeaderKey = key
-}
 func (m *Manager) UserIdHeaderKey() string {
 	return m.userIdHeaderKey
 }
 
-func (m *Manager) SetUserIvHeaderKey(key string) {
-	m.userIvHeaderKey = key
-}
 func (m *Manager) UserIvHeaderKey() string {
 	return m.userIvHeaderKey
 }

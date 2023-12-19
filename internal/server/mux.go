@@ -12,7 +12,10 @@ import (
 	"net/http"
 )
 
-func getRpcApiProxyMux(mdProviders *service.MethodMdProvider, middlewares []service.MuxRouteHandleFunc, p errobj.Provider, debugger debug.Debugger) *runtime.ServeMux {
+func newMux() *runtime.ServeMux {
+	return runtime.NewServeMux()
+}
+func initMux(mux *runtime.ServeMux, mdProviders *service.MethodMdProvider, middlewares []service.MuxRouteHandleFunc, p errobj.Provider, debugger debug.Debugger) {
 	ops := []runtime.ServeMuxOption{
 		runtime.WithIncomingHeaderMatcher(func(s string) (string, bool) {
 			return "", false
@@ -39,7 +42,7 @@ func getRpcApiProxyMux(mdProviders *service.MethodMdProvider, middlewares []serv
 			ops = append(ops, runtime.WithBeforeRoute(m))
 		}
 	}
-	return runtime.NewServeMux(
-		ops...,
-	)
+	for _, o := range ops {
+		o(mux)
+	}
 }

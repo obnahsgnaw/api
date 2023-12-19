@@ -33,10 +33,10 @@ func main() {
 	//jwt.SetKeyPrefix()
 
 	s := api.New(app, "auth", "auth", endtype.Backend, "/auth", 1)
-	s.With(api.DefaultEngine(url.Host{Ip: "127.0.0.1", Port: 8001}))
-	s.With(api.RpcServer(8002, true))
+	s.With(api.NewEngine(url.Host{Ip: "127.0.0.1", Port: 8001}))
+	s.With(api.RpcInsOrNew(nil, url.Host{Ip: "127.0.0.1", Port: 8002}, true))
 
-	s.With(api.DocService(&apidoc.Config{
+	s.With(api.Doc(&apidoc.Config{
 		Protocol: url.HTTP,
 		Path:     "/doc",
 		Title:    "认证",
