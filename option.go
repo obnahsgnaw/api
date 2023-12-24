@@ -2,10 +2,8 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/internal/middleware/authmid"
 	"github.com/obnahsgnaw/api/internal/middleware/permmid"
-	"github.com/obnahsgnaw/api/internal/server"
 	"github.com/obnahsgnaw/api/pkg/errobj"
 	"github.com/obnahsgnaw/api/service"
 	"github.com/obnahsgnaw/api/service/apidoc"
@@ -14,12 +12,7 @@ import (
 	"github.com/obnahsgnaw/api/service/crypt"
 	"github.com/obnahsgnaw/api/service/perm"
 	"github.com/obnahsgnaw/api/service/sign"
-	"github.com/obnahsgnaw/application/pkg/url"
-	"github.com/obnahsgnaw/application/pkg/utils"
-	"github.com/obnahsgnaw/http"
-	"github.com/obnahsgnaw/http/cors"
 	"github.com/obnahsgnaw/rpc"
-	"io"
 )
 
 type Option func(s *Server)
@@ -27,26 +20,6 @@ type Option func(s *Server)
 func RegEnable() Option {
 	return func(s *Server) {
 		s.regEnable = true
-	}
-}
-func AccessWriter(w io.Writer) Option {
-	return func(s *Server) {
-		s.accessWriter = w
-	}
-}
-func ErrorWriter(w io.Writer) Option {
-	return func(s *Server) {
-		s.errWriter = w
-	}
-}
-func TrustedProxies(proxies []string) Option { // 需要在引擎之前
-	return func(s *Server) {
-		s.trustedProxies = proxies
-	}
-}
-func Cors(c *cors.Config) Option { // 需要在引擎之前
-	return func(s *Server) {
-		s.cors = c
 	}
 }
 func AppMiddleware(m *authedapp.Manager) Option {
@@ -99,47 +72,9 @@ func Gateway(keyGen func() (string, error)) Option {
 		s.gatewayKeyGen = keyGen
 	}
 }
-func RouteDebug(debug bool) Option { // 需要在引擎之前
-	return func(s *Server) {
-		s.routeDebug = debug
-	}
-}
 func ErrObjProvider(p errobj.Provider) Option {
 	return func(s *Server) {
 		s.errObjProvider = p
-	}
-}
-func Engine(e *http.PortedEngine, mux *runtime.ServeMux) Option {
-	return func(s *Server) {
-		s.engine = e.Engine()
-		s.mux = mux
-		s.engineCus = true
-		s.host = e.Host()
-		s.initRegInfo()
-	}
-}
-func NewEngine(host url.Host) Option {
-	return func(s *Server) {
-		var err error
-		s.host = host
-		s.engine, err = server.NewEngine(&http.Config{
-			Name:           utils.ToStr(s.et.String(), "-", s.id),
-			DebugMode:      s.routeDebug,
-			LogDebug:       s.app.Debugger().Debug(),
-			TrustedProxies: s.trustedProxies,
-			Cors:           s.cors,
-			LogCnf:         s.logCnf,
-		})
-		s.mux = server.NewMux()
-		s.addErr(err)
-		s.initRegInfo()
-	}
-}
-func EngineInsOrNew(e *gin.Engine, mux *runtime.ServeMux, host url.Host) Option {
-	if e == nil {
-		return NewEngine(host)
-	} else {
-		return Engine(http.NewPortedEngine(e, host), mux)
 	}
 }
 func Doc(config *apidoc.Config) Option {
@@ -147,19 +82,29 @@ func Doc(config *apidoc.Config) Option {
 		s.addDoc(config)
 	}
 }
-func RpcInsOrNew(ins *rpc.Server, host url.Host, autoAdd bool) Option {
-	if ins != nil {
-		return RpcIns(ins, autoAdd)
-	}
-	return RpcServer(host, autoAdd)
-}
-func RpcServer(host url.Host, autoAdd bool) Option {
+func RpcServer() Option {
 	return func(s *Server) {
-		s.withRpcServer(host, autoAdd)
+		s.rps = rpc.New(s.app, s.engine.Http().Listener(), s.id, s.name, s.endType, rpc.Parent(rpc.NewPServer(s.id, s.serverType)), rpc.RegEnable(), rpc.IgLrClose(true))
 	}
 }
-func RpcIns(ins *rpc.Server, autoAdd bool) Option {
+func EngineIgRun(ig bool) Option {
 	return func(s *Server) {
-		s.withRpcServerIns(ins, autoAdd)
+		s.engineIgRun = ig
+	}
+}
+func EngineIgInit(ig bool) Option {
+	return func(s *Server) {
+		s.engineIgInit = ig
+	}
+}
+func RpcIgRun(ig bool) Option {
+	return func(s *Server) {
+		s.rpsIgRun = ig
+	}
+}
+func RpcIns(ins *rpc.Server) Option {
+	return func(s *Server) {
+		s.rps = ins
+		s.rps.AddRegInfo(s.id, s.name, rpc.NewPServer(s.id, s.serverType))
 	}
 }
