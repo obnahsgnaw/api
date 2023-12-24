@@ -7,6 +7,7 @@ import (
 	"github.com/obnahsgnaw/application/endtype"
 	"github.com/obnahsgnaw/application/pkg/logging/logger"
 	"github.com/obnahsgnaw/application/pkg/url"
+	engine2 "github.com/obnahsgnaw/http/engine"
 	"time"
 )
 
@@ -32,23 +33,28 @@ func main() {
 	//errhandler.SetDefaultErrObjProvider()
 	//jwt.SetKeyPrefix()
 
-	s := api.New(app, "auth", "auth", endtype.Backend, "/auth", 1)
-	s.With(api.NewEngine(url.Host{Ip: "127.0.0.1", Port: 8001}))
-	s.With(api.RpcInsOrNew(nil, url.Host{Ip: "127.0.0.1", Port: 8002}, true))
-
-	s.With(api.Doc(&apidoc.Config{
-		Protocol: url.HTTP,
-		Path:     "/doc",
-		Title:    "认证",
-		Provider: func() ([]byte, error) {
-			return []byte("ok"), nil
-		},
-		DebugOrigin: url.Origin{
+	e, _ := api.NewEngine(app, "auth", endtype.Backend, url.Host{Ip: "127.0.0.1", Port: 8001}, &engine2.Config{
+		LogDebug:       true,
+		TrustedProxies: nil,
+		Cors:           nil,
+	})
+	s := api.New(
+		app, "auth", "auth", endtype.Backend, e, "/auth", 1,
+		api.RpcServer(),
+		api.Doc(&apidoc.Config{
 			Protocol: url.HTTP,
-			Host:     url.Host{Ip: "127.0.0.1", Port: 8001},
-		},
-		EndType: endtype.Backend,
-	}))
+			Path:     "/doc",
+			Title:    "认证",
+			Provider: func() ([]byte, error) {
+				return []byte("ok"), nil
+			},
+			DebugOrigin: url.Origin{
+				Protocol: url.HTTP,
+				Host:     url.Host{Ip: "127.0.0.1", Port: 8001},
+			},
+			EndType: endtype.Backend,
+		}),
+	)
 
 	app.AddServer(s)
 

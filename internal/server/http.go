@@ -7,7 +7,6 @@ import (
 	"github.com/obnahsgnaw/api/pkg/errobj"
 	"github.com/obnahsgnaw/api/service"
 	"github.com/obnahsgnaw/application/pkg/debug"
-	"github.com/obnahsgnaw/http"
 	"strings"
 )
 
@@ -19,10 +18,6 @@ type MuxConfig struct {
 	ExtRoutes      []service.RouteProvider
 	ErrObjProvider errobj.Provider
 	Debugger       debug.Debugger
-}
-
-func NewEngine(config *http.Config) (e *gin.Engine, err error) {
-	return http.New(config)
 }
 
 func NewMux() *runtime.ServeMux {
