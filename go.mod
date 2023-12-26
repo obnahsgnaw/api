@@ -9,7 +9,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0
 	github.com/obnahsgnaw/application v0.16.0
 	github.com/obnahsgnaw/http v0.1.1
-	github.com/obnahsgnaw/rpc v0.5.8
+	github.com/obnahsgnaw/rpc v0.5.9
 	go.uber.org/zap v1.23.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc
 	google.golang.org/grpc v1.55.0
