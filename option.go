@@ -84,7 +84,7 @@ func Doc(config *apidoc.Config) Option {
 }
 func RpcServer() Option {
 	return func(s *Server) {
-		s.rps = rpc.New(s.app, s.engine.Http().Listener(), s.id, s.name, s.endType, rpc.Parent(rpc.NewPServer(s.id, s.serverType)), rpc.RegEnable(), rpc.IgLrClose(true))
+		s.rps = rpc.New(s.app, s.engine.Http().Listener(), s.id, s.name, s.endType, rpc.Parent(rpc.NewPServer(s.id, s.serverType)), rpc.RegEnable(), rpc.IgLrClose(true), rpc.IgLrServe(true))
 	}
 }
 func EngineIgRun(ig bool) Option {
