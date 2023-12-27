@@ -245,7 +245,7 @@ func (s *Server) Run(failedCb func(error)) {
 	s.logger.Info("initialized")
 	if !s.engineIgRun {
 		go func() {
-			if err = s.engine.Http().Run(); err != nil {
+			if err = s.engine.Http().RunAndServ(); err != nil {
 				failedCb(s.apiServerError(s.msg("engine run failed, err="+err.Error()), nil))
 			}
 		}()
