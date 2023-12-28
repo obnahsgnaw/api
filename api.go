@@ -179,14 +179,18 @@ func (s *Server) RegisterRpcService(provider rpc.ServiceInfo) {
 
 func (s *Server) AddMiddleware(name string, mid func() gin.HandlerFunc, force bool) {
 	if _, ok := s.middlewares[name]; ok && force || !ok {
-		s.logger.Debug(name + "middleware enabled")
+		if s.logger != nil {
+			s.logger.Debug(name + "middleware enabled")
+		}
 		s.middlewares[name] = mid
 	}
 }
 
 func (s *Server) AddMuxMiddleware(name string, mid func() service.MuxRouteHandleFunc, force bool) {
 	if _, ok := s.muxMiddleware[name]; ok && force || !ok {
-		s.logger.Debug(name + "middleware enabled")
+		if s.logger != nil {
+			s.logger.Debug(name + "middleware enabled")
+		}
 		s.muxMiddleware[name] = mid
 	}
 }
@@ -363,7 +367,9 @@ func (s *Server) addDoc(config *apidoc.Config) {
 			Protocol: "http",
 			Host:     s.engine.Http().Host(),
 		}.String() + config.Path
-		s.logger.Debug("api " + config.EndType.String() + "doc service enabled, url=" + docUrl)
+		if s.logger != nil {
+			s.logger.Debug("api " + config.EndType.String() + "doc service enabled, url=" + docUrl)
+		}
 		return server.DocRoute(config.Path, config.Provider)
 	})
 }
