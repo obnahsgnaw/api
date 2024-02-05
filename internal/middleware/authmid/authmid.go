@@ -16,24 +16,14 @@ func NewAuthMid(manager *autheduser.Manager, debugCb func(msg string), errHandle
 		debugCb = func(msg string) {}
 	}
 	return func(c *gin.Context) {
+		var err error
+		var user autheduser.User
 		rqId := c.Request.Header.Get("X-Request-ID")
 		appId := c.Request.Header.Get(manager.AppIdHeaderKey())
 		token := c.Request.Header.Get(manager.TokenHeaderKey())
-		if token != "" {
-			var err error
-			var user autheduser.User
-			// validate outside, fetch the uid user from provide
-			if manager.OutsideValidate() {
-				debugCb("auth-middleware: validate outside")
-				uid := c.Request.Header.Get(manager.UserIdHeaderKey())
-				user, err = manager.Provider().GetIdUser(appId, uid)
-			} else {
-				// validate inside, fetch the token user from provider
-				debugCb("auth-middleware: validate inside")
-				user, err = manager.Provider().GetTokenUser(appId, token)
-			}
 
-			if err != nil {
+		if token != "" {
+			if user, err = manager.Provider().GetTokenUser(appId, token); err != nil {
 				debugCb("auth-middleware: validate failed, err=" + err.Error())
 				c.Abort()
 				errHandle(

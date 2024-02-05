@@ -10,20 +10,8 @@ func (m *Manager) With(o ...Option) {
 	}
 }
 
-func OutsideValidate(cb func() bool) Option {
-	return func(s *Manager) {
-		s.outsideValidate = cb
-	}
-}
-
 func AppIdHeaderKey(key string) Option {
 	return func(s *Manager) {
-		s.appIdBfHeaderKey = key
-	}
-}
-
-func AuthedAppidHeaderKey(key string) Option {
-	return func(s *Manager) {
-		s.appIdAfHeaderKey = key
+		s.appIdHeaderKey = key
 	}
 }

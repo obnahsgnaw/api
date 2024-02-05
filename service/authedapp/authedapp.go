@@ -8,12 +8,10 @@ package authedapp
 
 // Manager authed app manager
 type Manager struct {
-	Project          string
-	provider         AppProvider
-	apps             map[string]App
-	outsideValidate  func() bool
-	appIdBfHeaderKey string
-	appIdAfHeaderKey string
+	Project        string
+	provider       AppProvider
+	apps           map[string]App
+	appIdHeaderKey string
 }
 
 // AppProvider app provider interface
@@ -35,14 +33,10 @@ type App interface {
 // New return an authed app manager
 func New(project string, provider AppProvider, o ...Option) *Manager {
 	s := &Manager{
-		Project:  project,
-		provider: provider,
-		apps:     make(map[string]App),
-		outsideValidate: func() bool {
-			return false
-		},
-		appIdBfHeaderKey: "X-App-Id",
-		appIdAfHeaderKey: "X-App-Id",
+		Project:        project,
+		provider:       provider,
+		apps:           make(map[string]App),
+		appIdHeaderKey: "X-App-Id",
 	}
 	s.With(o...)
 	return s
@@ -71,14 +65,6 @@ func (m *Manager) Provider() AppProvider {
 	return m.provider
 }
 
-func (m *Manager) OutsideValidate() bool {
-	return m.outsideValidate()
-}
-
 func (m *Manager) AppidHeaderKey() string {
-	return m.appIdBfHeaderKey
-}
-
-func (m *Manager) AuthedAppidHeaderKey() string {
-	return m.appIdAfHeaderKey
+	return m.appIdHeaderKey
 }
