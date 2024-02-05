@@ -23,6 +23,6 @@ func UserIdHeaderKey(key string) Option {
 }
 func UserSignHeaderKey(key string) Option {
 	return func(s *Manager) {
-		s.userSignHeaderKey = key
+		s.signHeaderKey = key
 	}
 }

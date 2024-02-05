@@ -9,7 +9,6 @@ type Manager struct {
 	provider        UserProvider
 	logger          *zap.Logger
 	users           map[string]User
-	outsideValidate func() bool
 	appIdHeaderKey  string
 	userIdHeaderKey string
 	tokenHeaderKey  string
@@ -33,11 +32,8 @@ type UserProvider interface {
 // New return an authed user manager
 func New(provider UserProvider, o ...Option) *Manager {
 	s := &Manager{
-		users:    make(map[string]User),
-		provider: provider,
-		outsideValidate: func() bool {
-			return false
-		},
+		users:           make(map[string]User),
+		provider:        provider,
 		appIdHeaderKey:  "X-App-Id",
 		userIdHeaderKey: "X-User-Id",
 		tokenHeaderKey:  "Authorization",
@@ -67,10 +63,6 @@ func (m *Manager) Get(rqId string) (user User, exist bool) {
 // Provider return user provider
 func (m *Manager) Provider() UserProvider {
 	return m.provider
-}
-
-func (m *Manager) OutsideValidate() bool {
-	return m.outsideValidate()
 }
 
 func (m *Manager) AppIdHeaderKey() string {

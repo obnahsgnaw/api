@@ -12,6 +12,7 @@ import (
 )
 
 // if validate outside, then not user the mid
+// sign: sign-timestamp-nonce
 
 func NewSignMid(manager *sign.Manager, debugCb func(msg string), errHandle func(err error, marshaler runtime.Marshaler, w http.ResponseWriter)) gin.HandlerFunc {
 	if debugCb == nil {
@@ -20,7 +21,7 @@ func NewSignMid(manager *sign.Manager, debugCb func(msg string), errHandle func(
 	return func(c *gin.Context) {
 		appId := c.GetHeader(manager.AppIdHeaderKey())
 		userId := c.GetHeader(manager.UserIdHeaderKey())
-		signStr := c.GetHeader(manager.UserSignHeaderKey())
+		signStr := c.GetHeader(manager.SignHeaderKey())
 		method := c.Request.Method
 		uri := c.Request.URL.Path
 
@@ -61,7 +62,7 @@ func NewSignMid(manager *sign.Manager, debugCb func(msg string), errHandle func(
 		} else {
 			signStr1 := toSignStr(s1, t1, n1)
 			debugCb("sign-middleware: sign out=" + signStr1)
-			c.Header(manager.UserSignHeaderKey(), signStr1)
+			c.Header(manager.SignHeaderKey(), signStr1)
 		}
 	}
 }

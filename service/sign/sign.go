@@ -6,18 +6,18 @@ type Provider interface {
 }
 
 type Manager struct {
-	provider          Provider
-	appIdHeaderKey    string
-	userIdHeaderKey   string
-	userSignHeaderKey string
+	provider        Provider
+	appIdHeaderKey  string
+	userIdHeaderKey string
+	signHeaderKey   string
 }
 
 func New(provider Provider, o ...Option) *Manager {
 	s := &Manager{
-		provider:          provider,
-		appIdHeaderKey:    "X-App-Id",
-		userIdHeaderKey:   "X-User-Id",
-		userSignHeaderKey: "X-User-Signature",
+		provider:        provider,
+		appIdHeaderKey:  "X-App-Id",
+		userIdHeaderKey: "X-User-Id",
+		signHeaderKey:   "X-Signature",
 	}
 	s.With(o...)
 	return s
@@ -36,6 +36,6 @@ func (m *Manager) UserIdHeaderKey() string {
 	return m.userIdHeaderKey
 }
 
-func (m *Manager) UserSignHeaderKey() string {
-	return m.userSignHeaderKey
+func (m *Manager) SignHeaderKey() string {
+	return m.signHeaderKey
 }
