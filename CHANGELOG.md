@@ -1,4 +1,12 @@
 
+<a name="v0.27.19"></a>
+## [v0.27.19](https://8.140.161.172/wangsb/wgateway/compare/v0.27.18...v0.27.19) (2024-02-05)
+
+### Features
+
+* **mid:** del outside validate
+
+
 <a name="v0.27.18"></a>
 ## [v0.27.18](https://8.140.161.172/wangsb/wgateway/compare/v0.27.17...v0.27.18) (2023-12-29)
 
