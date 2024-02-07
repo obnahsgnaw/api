@@ -21,6 +21,8 @@ type User interface {
 	Name() string
 	Backend() bool
 	Attr(attr string) (string, bool)
+	Attrs() map[string]string
+	DefaultAttr(attr, defVal string) string
 }
 
 // UserProvider User provider interface
