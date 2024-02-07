@@ -28,6 +28,8 @@ type App interface {
 	Scope() []string
 	Manage() bool
 	Attr(attr string) (string, bool)
+	Attrs() map[string]string
+	DefaultAttr(attr, defVal string) string
 }
 
 // New return an authed app manager
