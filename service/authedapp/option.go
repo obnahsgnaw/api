@@ -15,3 +15,12 @@ func AppIdHeaderKey(key string) Option {
 		s.appIdHeaderKey = key
 	}
 }
+
+func IgnoreChecker(i Ignorer, a App) Option {
+	return func(s *Manager) {
+		if i != nil && a != nil {
+			s.ignoreChecker = i
+			s.ignoreApp = a
+		}
+	}
+}

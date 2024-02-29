@@ -22,24 +22,28 @@ func NewAuthMid(manager *autheduser.Manager, debugCb func(msg string), errHandle
 		appId := c.Request.Header.Get(manager.AppIdHeaderKey())
 		token := c.Request.Header.Get(manager.TokenHeaderKey())
 
-		if token != "" {
-			if user, err = manager.Provider().GetTokenUser(appId, token); err != nil {
-				debugCb("auth-middleware: validate failed, err=" + err.Error())
-				c.Abort()
-				errHandle(
-					apierr.ToStatusError(apierr.NewUnauthorizedError(apierr.AuthMidInvalid, err)),
-					marshaler.GetMarshaler(c.Request.Header.Get("Accept")),
-					c.Writer,
-				)
-				return
+		if !manager.Ignored(c) {
+			if token != "" {
+				if user, err = manager.Provider().GetTokenUser(appId, token); err != nil {
+					debugCb("auth-middleware: validate failed, err=" + err.Error())
+					c.Abort()
+					errHandle(
+						apierr.ToStatusError(apierr.NewUnauthorizedError(apierr.AuthMidInvalid, err)),
+						marshaler.GetMarshaler(c.Request.Header.Get("Accept")),
+						c.Writer,
+					)
+					return
+				}
+
+				debugCb("auth-middleware: accessed, user=" + strconv.Itoa(int(user.Id())))
+				c.Request.Header.Set(manager.UserIdHeaderKey(), user.Uid())
+
+				manager.Add(rqId, user)
+			} else {
+				debugCb("auth-middleware: token empty, ignored")
 			}
-
-			debugCb("auth-middleware: accessed, user=" + strconv.Itoa(int(user.Id())))
-			c.Request.Header.Set(manager.UserIdHeaderKey(), user.Uid())
-
-			manager.Add(rqId, user)
 		} else {
-			debugCb("auth-middleware: token empty, ignored")
+			debugCb("auth-middleware: validate ignored by ignorer")
 		}
 
 		c.Next()

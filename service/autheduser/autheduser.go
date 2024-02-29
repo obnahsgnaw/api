@@ -1,8 +1,11 @@
 package autheduser
 
 import (
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
+
+type Ignorer func(*gin.Context) bool
 
 // Manager authed user manager
 type Manager struct {
@@ -12,6 +15,7 @@ type Manager struct {
 	appIdHeaderKey  string
 	userIdHeaderKey string
 	tokenHeaderKey  string
+	ignoreChecker   Ignorer
 }
 
 // User interface
@@ -42,6 +46,10 @@ func New(provider UserProvider, o ...Option) *Manager {
 	}
 	s.With(o...)
 	return s
+}
+
+func NewManager(provider UserProvider, o ...Option) *Manager {
+	return New(provider, o...)
 }
 
 // Add an authed app for request id
@@ -77,4 +85,11 @@ func (m *Manager) UserIdHeaderKey() string {
 
 func (m *Manager) TokenHeaderKey() string {
 	return m.tokenHeaderKey
+}
+
+func (m *Manager) Ignored(c *gin.Context) bool {
+	if m.ignoreChecker != nil {
+		return m.ignoreChecker(c)
+	}
+	return false
 }

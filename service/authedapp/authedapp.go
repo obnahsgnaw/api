@@ -1,10 +1,14 @@
 package authedapp
 
+import "github.com/gin-gonic/gin"
+
 /*
 说明：
 1. 内部验证， 即内部通过rpc验证X-App-Id的真实性，并得到详情
 2. 外部验证， 即网关层先验证X-App-Id的真实性，内部只是查询该id的详情
 */
+
+type Ignorer func(c *gin.Context) bool
 
 // Manager authed app manager
 type Manager struct {
@@ -12,6 +16,8 @@ type Manager struct {
 	provider       AppProvider
 	apps           map[string]App
 	appIdHeaderKey string
+	ignoreChecker  Ignorer
+	ignoreApp      App
 }
 
 // AppProvider app provider interface
@@ -44,6 +50,10 @@ func New(project string, provider AppProvider, o ...Option) *Manager {
 	return s
 }
 
+func NewManager(project string, provider AppProvider, o ...Option) *Manager {
+	return New(project, provider, o...)
+}
+
 // Add an authed app for request id
 func (m *Manager) Add(rqId string, app App) {
 	m.apps[rqId] = app
@@ -69,4 +79,11 @@ func (m *Manager) Provider() AppProvider {
 
 func (m *Manager) AppidHeaderKey() string {
 	return m.appIdHeaderKey
+}
+
+func (m *Manager) Ignored(c *gin.Context) (bool, App) {
+	if m.ignoreChecker != nil {
+		return m.ignoreChecker(c), m.ignoreApp
+	}
+	return false, nil
 }
