@@ -22,15 +22,20 @@ func NewAppMid(manager *authedapp.Manager, debugCb func(msg string), errHandle f
 		rqId := c.Request.Header.Get("X-Request-Id")
 		appId := c.Request.Header.Get(manager.AppidHeaderKey())
 
-		if app, err = manager.Provider().GetValidApp(appId, manager.Project, true); err != nil {
-			debugCb("app-middleware: validate failed,err=" + err.Error())
-			c.Abort()
-			errHandle(
-				apierr.ToStatusError(apierr.NewUnauthorizedError(apierr.AppMidInvalid, err)),
-				marshaler.GetMarshaler(c.GetHeader("Accept")),
-				c.Writer,
-			)
-			return
+		if ig, igApp := manager.Ignored(c); !ig {
+			if app, err = manager.Provider().GetValidApp(appId, manager.Project, true); err != nil {
+				debugCb("app-middleware: validate failed,err=" + err.Error())
+				c.Abort()
+				errHandle(
+					apierr.ToStatusError(apierr.NewUnauthorizedError(apierr.AppMidInvalid, err)),
+					marshaler.GetMarshaler(c.GetHeader("Accept")),
+					c.Writer,
+				)
+				return
+			}
+		} else {
+			app = igApp
+			debugCb("app-middleware: validate ignored by ignorer")
 		}
 
 		debugCb("app-middleware: accessed, id=" + app.AppId())
