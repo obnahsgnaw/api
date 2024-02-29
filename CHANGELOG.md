@@ -1,4 +1,12 @@
 
+<a name="v0.27.22"></a>
+## [v0.27.22](https://8.140.161.172/wangsb/wgateway/compare/v0.27.21...v0.27.22) (2024-02-29)
+
+### Bug Fixes
+
+* **authed app user:** fix ignore
+
+
 <a name="v0.27.21"></a>
 ## [v0.27.21](https://8.140.161.172/wangsb/wgateway/compare/v0.27.20...v0.27.21) (2024-02-27)
 
