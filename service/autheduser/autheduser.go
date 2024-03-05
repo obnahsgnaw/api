@@ -3,6 +3,7 @@ package autheduser
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"sync"
 )
 
 type Ignorer func(*gin.Context) bool
@@ -11,7 +12,7 @@ type Ignorer func(*gin.Context) bool
 type Manager struct {
 	provider        UserProvider
 	logger          *zap.Logger
-	users           map[string]User
+	users           sync.Map // rq id=>User
 	appIdHeaderKey  string
 	userIdHeaderKey string
 	tokenHeaderKey  string
@@ -38,7 +39,6 @@ type UserProvider interface {
 // New return an authed user manager
 func New(provider UserProvider, o ...Option) *Manager {
 	s := &Manager{
-		users:           make(map[string]User),
 		provider:        provider,
 		appIdHeaderKey:  "X-App-Id",
 		userIdHeaderKey: "X-User-Id",
@@ -54,19 +54,21 @@ func NewManager(provider UserProvider, o ...Option) *Manager {
 
 // Add an authed app for request id
 func (m *Manager) Add(rqId string, user User) {
-	m.users[rqId] = user
+	m.users.Store(rqId, user)
 }
 
 // Rm remove an authed app for request id
 func (m *Manager) Rm(rqId string) {
-	if _, ok := m.users[rqId]; ok {
-		delete(m.users, rqId)
-	}
+	m.users.Delete(rqId)
 }
 
 // Get return an authed app for request id
 func (m *Manager) Get(rqId string) (user User, exist bool) {
-	user, exist = m.users[rqId]
+	var v interface{}
+	v, exist = m.users.Load(rqId)
+	if exist {
+		user = v.(User)
+	}
 	return
 }
 
