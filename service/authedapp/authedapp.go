@@ -1,6 +1,9 @@
 package authedapp
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"sync"
+)
 
 /*
 说明：
@@ -14,7 +17,7 @@ type Ignorer func(c *gin.Context) bool
 type Manager struct {
 	Project        string
 	provider       AppProvider
-	apps           map[string]App
+	apps           sync.Map // rq id => App
 	appIdHeaderKey string
 	ignoreChecker  Ignorer
 	ignoreApp      App
@@ -43,7 +46,6 @@ func New(project string, provider AppProvider, o ...Option) *Manager {
 	s := &Manager{
 		Project:        project,
 		provider:       provider,
-		apps:           make(map[string]App),
 		appIdHeaderKey: "X-App-Id",
 	}
 	s.With(o...)
@@ -56,19 +58,21 @@ func NewManager(project string, provider AppProvider, o ...Option) *Manager {
 
 // Add an authed app for request id
 func (m *Manager) Add(rqId string, app App) {
-	m.apps[rqId] = app
+	m.apps.Store(rqId, app)
 }
 
 // Rm remove an authed app for request id
 func (m *Manager) Rm(rqId string) {
-	if _, ok := m.apps[rqId]; ok {
-		delete(m.apps, rqId)
-	}
+	m.apps.Delete(rqId)
 }
 
 // Get return an authed app for request id
 func (m *Manager) Get(rqId string) (app App, exist bool) {
-	app, exist = m.apps[rqId]
+	var v interface{}
+	v, exist = m.apps.Load(rqId)
+	if exist {
+		app = v.(App)
+	}
 	return
 }
 
