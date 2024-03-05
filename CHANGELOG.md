@@ -1,4 +1,12 @@
 
+<a name="v0.27.23"></a>
+## [v0.27.23](https://8.140.161.172/wangsb/wgateway/compare/v0.27.22...v0.27.23) (2024-03-05)
+
+### Bug Fixes
+
+* **authed app and user:** fix sync map
+
+
 <a name="v0.27.22"></a>
 ## [v0.27.22](https://8.140.161.172/wangsb/wgateway/compare/v0.27.21...v0.27.22) (2024-02-29)
 
