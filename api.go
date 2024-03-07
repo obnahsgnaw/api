@@ -428,8 +428,10 @@ func (s *Server) regGateway() error {
 		}
 
 		if key != "" && key != s.gatewayKey {
+			if s.gatewayKey != "" {
+				_ = s.app.Register().Unregister(s.app.Context(), s.gatewayKey)
+			}
 			s.gatewayKey = key
-			_ = s.app.Register().Unregister(s.app.Context(), s.gatewayKey)
 			if err = s.app.Register().Register(s.app.Context(), s.gatewayKey, url.Origin{
 				Protocol: url.HTTP,
 				Host:     s.engine.Http().Host(),
