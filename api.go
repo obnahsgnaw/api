@@ -84,7 +84,7 @@ func New(app *application.Application, id, name string, et endtype.EndType, e *e
 		s.addErr(s.apiServerError(s.msg("path prefix empty"), nil))
 	}
 	s.logCnf = s.app.LogConfig()
-	s.logger = s.app.Logger().Named(utils.ToStr(s.serverType.String(), "-", s.endType.String(), "-", s.id))
+	s.logger = s.app.Logger().Named(utils.ToStr(s.serverType.String(), "-", s.id))
 	s.addErr(err)
 	s.initRegInfo()
 	s.With(options...)
