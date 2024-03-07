@@ -83,8 +83,8 @@ func New(app *application.Application, id, name string, et endtype.EndType, e *e
 	if s.pathPrefix == "" {
 		s.addErr(s.apiServerError(s.msg("path prefix empty"), nil))
 	}
-	s.logCnf = logCnf(app, et, id)
-	s.logger, err = logger.New(utils.ToStr(s.serverType.String(), ":", s.endType.String(), "-", s.id), s.logCnf, s.app.Debugger().Debug())
+	s.logCnf = s.app.LogConfig()
+	s.logger = s.app.Logger().Named(utils.ToStr(s.serverType.String(), "-", s.endType.String(), "-", s.id))
 	s.addErr(err)
 	s.initRegInfo()
 	s.With(options...)
