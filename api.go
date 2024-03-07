@@ -22,7 +22,6 @@ import (
 	"github.com/obnahsgnaw/rpc"
 	"go.uber.org/zap"
 	"net/http"
-	"path/filepath"
 	"strings"
 )
 
@@ -94,8 +93,7 @@ func New(app *application.Application, id, name string, et endtype.EndType, e *e
 func logCnf(app *application.Application, et endtype.EndType, id string) *logger.Config {
 	cnf := logger.CopyCnfWithLevel(app.LogConfig())
 	if cnf != nil {
-		cnf.AddSubDir(filepath.Join(et.String(), utils.ToStr(servertype.Api.String(), "-", id)))
-		cnf.SetFilename(utils.ToStr(servertype.Api.String(), "-", id))
+		cnf.SetFilename(utils.ToStr(servertype.Api.String(), "-", et.String(), "-", id))
 	}
 	return cnf
 }
