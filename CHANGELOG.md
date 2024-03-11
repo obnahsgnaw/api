@@ -1,4 +1,12 @@
 
+<a name="v0.27.29"></a>
+## [v0.27.29](https://8.140.161.172/wangsb/wgateway/compare/v0.27.28...v0.27.29) (2024-03-11)
+
+### Bug Fixes
+
+* **mid:** app mid
+
+
 <a name="v0.27.28"></a>
 ## [v0.27.28](https://8.140.161.172/wangsb/wgateway/compare/v0.27.27...v0.27.28) (2024-03-07)
 
