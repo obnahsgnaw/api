@@ -37,6 +37,7 @@ func NewAppMid(manager *authedapp.Manager, debugCb func(msg string), errHandle f
 			app = igApp
 			debugCb("app-middleware: validate ignored by ignorer")
 		}
+		c.Request.Header.Set(manager.AppidHeaderKey(), app.AppId())
 
 		debugCb("app-middleware: accessed, id=" + app.AppId())
 		manager.Add(rqId, app)
