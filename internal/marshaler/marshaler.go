@@ -7,7 +7,7 @@ import (
 
 func JsonMarshaler() runtime.Marshaler {
 	return &runtime.HTTPBodyMarshaler{
-		Marshaler: &runtime.JSONPb{
+		Marshaler: &JSONPb{
 			MarshalOptions: protojson.MarshalOptions{
 				EmitUnpopulated: true,
 				UseEnumNumbers:  true,
@@ -21,7 +21,7 @@ func JsonMarshaler() runtime.Marshaler {
 
 func ProtoMarshaler() runtime.Marshaler {
 	return &runtime.HTTPBodyMarshaler{
-		Marshaler: &runtime.ProtoMarshaller{},
+		Marshaler: &ProtoMarshaller{},
 	}
 }
 
