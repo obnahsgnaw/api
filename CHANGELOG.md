@@ -1,4 +1,12 @@
 
+<a name="v0.27.30"></a>
+## [v0.27.30](https://8.140.161.172/wangsb/wgateway/compare/v0.27.29...v0.27.30) (2024-03-16)
+
+### Bug Fixes
+
+* **marshaler:** fix json proto marshaler for proto
+
+
 <a name="v0.27.29"></a>
 ## [v0.27.29](https://8.140.161.172/wangsb/wgateway/compare/v0.27.28...v0.27.29) (2024-03-11)
 
