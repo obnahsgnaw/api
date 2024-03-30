@@ -11,13 +11,13 @@ import (
 )
 
 type MuxConfig struct {
-	PathPrefix     string
-	MdProvider     *service.MethodMdProvider
-	Middlewares    []gin.HandlerFunc
-	MuxMiddleware  []service.MuxRouteHandleFunc
-	ExtRoutes      []service.RouteProvider
-	ErrObjProvider errobj.Provider
-	Debugger       debug.Debugger
+	Version          string
+	MdProvider       *service.MethodMdProvider
+	MiddlewarePds    []gin.HandlerFunc
+	MuxMiddlewarePds []service.MuxRouteHandleFunc
+	ExtRoutes        []service.RouteProvider
+	ErrObjProvider   errobj.Provider
+	Debugger         debug.Debugger
 }
 
 func NewMux() *runtime.ServeMux {
@@ -26,15 +26,14 @@ func NewMux() *runtime.ServeMux {
 
 // InitRpcHttpProxyServer 创建一个rpc服务的http代理服务
 func InitRpcHttpProxyServer(e *gin.Engine, mux *runtime.ServeMux, cnf *MuxConfig) {
-	initMux(mux, cnf.MdProvider, cnf.MuxMiddleware, cnf.ErrObjProvider, cnf.Debugger)
+	initMux(mux, cnf.MdProvider, cnf.MuxMiddlewarePds, cnf.ErrObjProvider, cnf.Debugger)
 	e.Use(authmid.NewRqIdMid())
-	prefix := "/" + strings.TrimPrefix(cnf.PathPrefix, "/")
+	version := "/" + strings.TrimPrefix(cnf.Version, "/")
 	// 设置路由
-	e.GET(prefix, gin.WrapH(mux))
-	// 设置其他路由
 	AddExtRoute(e, cnf.ExtRoutes)
+	e.GET(version, gin.WrapH(mux))
 	// 代理到rpc
-	e.Group(strings.TrimSuffix(prefix, "/")+"/*gw", cnf.Middlewares...).Any("", gin.WrapH(mux))
+	e.Group(strings.TrimSuffix(version, "/")+"/*gw", cnf.MiddlewarePds...).Any("", gin.WrapH(mux))
 }
 
 func AddExtRoute(e *gin.Engine, routes []service.RouteProvider) {
