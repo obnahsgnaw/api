@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/obnahsgnaw/api/internal/middleware/authmid"
 	"github.com/obnahsgnaw/api/internal/middleware/permmid"
+	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/pkg/errobj"
 	"github.com/obnahsgnaw/api/service"
 	"github.com/obnahsgnaw/api/service/apidoc"
@@ -77,14 +78,9 @@ func ErrObjProvider(p errobj.Provider) Option {
 		s.errObjProvider = p
 	}
 }
-func Doc(config *apidoc.Config) Option {
+func DocServer(config *apidoc.Config) Option {
 	return func(s *Server) {
 		s.addDoc(config)
-	}
-}
-func RpcServer() Option {
-	return func(s *Server) {
-		s.rps = rpc.New(s.app, s.engine.Http().Listener(), s.id, s.name, s.endType, rpc.Parent(rpc.NewPServer(s.id, s.serverType)), rpc.RegEnable(), rpc.IgLrClose(true), rpc.IgLrServe(true))
 	}
 }
 func EngineIgRun(ig bool) Option {
@@ -97,14 +93,24 @@ func EngineIgInit(ig bool) Option {
 		s.engineIgInit = ig
 	}
 }
-func RpcIgRun(ig bool) Option {
+func RpcServer() Option {
 	return func(s *Server) {
-		s.rpsIgRun = ig
+		s.rpcServer = rpc.New(s.app, s.httpEngine.Http().Listener(), s.id, s.name, s.endType, rpc.NewPServer(s.id, s.serverType), rpc.RegEnable(), rpc.IgLrClose(true), rpc.IgLrServe(true))
 	}
 }
 func RpcIns(ins *rpc.Server) Option {
 	return func(s *Server) {
-		s.rps = ins
-		s.rps.AddRegInfo(s.id, s.name, rpc.NewPServer(s.id, s.serverType))
+		s.rpcServer = ins
+		s.rpcServer.AddRegInfo(s.id, s.name, rpc.NewPServer(s.id, s.serverType))
+	}
+}
+func RpcIgRun(ig bool) Option {
+	return func(s *Server) {
+		s.rpcServerIgRun = ig
+	}
+}
+func ErrCodePrefix(p int) Option {
+	return func(s *Server) {
+		s.errFactory = apierr.New(p)
 	}
 }

@@ -21,7 +21,7 @@ func New(e *http.Http, mux *runtime.ServeMux) *MuxHttp {
 }
 
 func Default(host url.Host, cnf *engine.Config) (*MuxHttp, error) {
-	if e, err := http.Default(host, cnf); err != nil {
+	if e, err := http.Default(host.Ip, host.Port, cnf); err != nil {
 		return nil, err
 	} else {
 		return New(e, server.NewMux()), nil

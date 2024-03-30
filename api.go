@@ -22,69 +22,67 @@ import (
 	"github.com/obnahsgnaw/rpc"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
+type Version int
+
+func (v Version) String() string {
+	return "v" + strconv.Itoa(int(v))
+}
+
 // Server API server
 type Server struct {
-	id             string // 模块
-	name           string
-	app            *application.Application
-	endType        endtype.EndType
-	serverType     servertype.ServerType
-	engine         *engine.MuxHttp
-	errFactory     *apierr.Factory
-	rps            *rpc.Server
-	logger         *zap.Logger
-	logCnf         *logger.Config
-	services       []ServiceProvider
-	regInfo        *regCenter.RegInfo
-	docRegInfos    []*regCenter.RegInfo
-	mdProvider     *service.MethodMdProvider
-	errObjProvider errobj.Provider
-	engineIgRun    bool
-	engineIgInit   bool
-	regEnable      bool
-	rpsIgRun       bool
-	errs           []error
-	pathPrefix     string
-	middlewares    map[string]func() gin.HandlerFunc
-	muxMiddleware  map[string]func() service.MuxRouteHandleFunc
-	extRoutes      []func() service.RouteProvider
-	gatewayKeyGen  func() (string, error)
-	gatewayKey     string
+	app              *application.Application
+	id               string // 模块
+	name             string
+	endType          endtype.EndType
+	serverType       servertype.ServerType
+	httpEngine       *engine.MuxHttp
+	errFactory       *apierr.Factory
+	rpcServer        *rpc.Server
+	logger           *zap.Logger
+	logCnf           *logger.Config
+	services         []ServiceProvider
+	regInfo          *regCenter.RegInfo
+	docRegInfos      []*regCenter.RegInfo
+	mdProvider       *service.MethodMdProvider
+	errObjProvider   errobj.Provider
+	version          Version
+	engineIgRun      bool
+	engineIgInit     bool
+	regEnable        bool
+	rpcServerIgRun   bool
+	middlewarePds    map[string]func() gin.HandlerFunc
+	muxMiddlewarePds map[string]func() service.MuxRouteHandleFunc
+	extRoutePds      []func() service.RouteProvider
+	gatewayKeyGen    func() (string, error)
+	gatewayKey       string
 }
 
 // ServiceProvider api service provider
 type ServiceProvider func(ctx context.Context, mux *runtime.ServeMux) (name string, err error)
 
-func New(app *application.Application, id, name string, et endtype.EndType, e *engine.MuxHttp, pathPrefix string, errCodePrefix int, options ...Option) *Server {
-	var err error
+func New(app *application.Application, e *engine.MuxHttp, id, name string, et endtype.EndType, v Version, options ...Option) *Server {
 	s := &Server{
+		app:        app,
 		id:         id,
 		name:       name,
-		app:        app,
-		serverType: servertype.Api,
 		endType:    et,
-		engine:     e,
-		errFactory: apierr.New(errCodePrefix),
-		pathPrefix: strings.TrimPrefix(pathPrefix, "/"),
+		serverType: servertype.Api,
+		httpEngine: e,
+		version:    v,
+		errFactory: apierr.New(1),
 		errObjProvider: func(param errobj.Param) interface{} {
 			return param
 		},
-		mdProvider:    service.NewMdProvider(),
-		middlewares:   make(map[string]func() gin.HandlerFunc),
-		muxMiddleware: make(map[string]func() service.MuxRouteHandleFunc),
+		mdProvider:       service.NewMdProvider(),
+		middlewarePds:    make(map[string]func() gin.HandlerFunc),
+		muxMiddlewarePds: make(map[string]func() service.MuxRouteHandleFunc),
+		logCnf:           app.LogConfig(),
+		logger:           app.Logger().Named(utils.ToStr(servertype.Api.String(), "-", et.String(), "-", id)),
 	}
-	if s.id == "" || s.name == "" {
-		s.addErr(s.apiServerError(s.msg("id name invalid"), nil))
-	}
-	if s.pathPrefix == "" {
-		s.addErr(s.apiServerError(s.msg("path prefix empty"), nil))
-	}
-	s.logCnf = s.app.LogConfig()
-	s.logger = s.app.Logger().Named(utils.ToStr(s.serverType.String(), "-", s.endType.String(), "-", s.id))
-	s.addErr(err)
 	s.initRegInfo()
 	s.With(options...)
 	return s
@@ -128,7 +126,10 @@ func (s *Server) EndType() endtype.EndType {
 
 // Host return the api service host
 func (s *Server) Host() url.Host {
-	return s.engine.Http().Host()
+	return url.Host{
+		Ip:   s.httpEngine.Http().Ip(),
+		Port: s.httpEngine.Http().Port(),
+	}
 }
 
 // RegEnabled reg http
@@ -156,11 +157,11 @@ func (s *Server) App() *application.Application {
 }
 
 func (s *Server) Engine() *engine.MuxHttp {
-	return s.engine
+	return s.httpEngine
 }
 
 func (s *Server) Rpc() *rpc.Server {
-	return s.rps
+	return s.rpcServer
 }
 
 // RegisterApiService register a api service
@@ -170,31 +171,31 @@ func (s *Server) RegisterApiService(provider ServiceProvider) {
 
 // RegisterRpcService register a rcp service
 func (s *Server) RegisterRpcService(provider rpc.ServiceInfo) {
-	if s.rps != nil {
-		s.rps.RegisterService(provider)
+	if s.rpcServer != nil {
+		s.rpcServer.RegisterService(provider)
 	}
 }
 
 func (s *Server) AddMiddleware(name string, mid func() gin.HandlerFunc, force bool) {
-	if _, ok := s.middlewares[name]; ok && force || !ok {
+	if _, ok := s.middlewarePds[name]; ok && force || !ok {
 		if s.logger != nil {
 			s.logger.Debug(name + "middleware enabled")
 		}
-		s.middlewares[name] = mid
+		s.middlewarePds[name] = mid
 	}
 }
 
 func (s *Server) AddMuxMiddleware(name string, mid func() service.MuxRouteHandleFunc, force bool) {
-	if _, ok := s.muxMiddleware[name]; ok && force || !ok {
+	if _, ok := s.muxMiddlewarePds[name]; ok && force || !ok {
 		if s.logger != nil {
 			s.logger.Debug(name + "middleware enabled")
 		}
-		s.muxMiddleware[name] = mid
+		s.muxMiddlewarePds[name] = mid
 	}
 }
 
 func (s *Server) AddRoute(route func() service.RouteProvider) {
-	s.extRoutes = append(s.extRoutes, route)
+	s.extRoutePds = append(s.extRoutePds, route)
 }
 
 func (s *Server) AddDefIncomeMd(key string, valProvider service.MdValParser) {
@@ -212,18 +213,14 @@ func (s *Server) ErrCode() *apierr.Factory {
 
 func (s *Server) Run(failedCb func(error)) {
 	var err error
-	if len(s.errs) != 0 {
-		failedCb(s.errs[0])
-		return
-	}
 	s.logger.Info("init start...")
-	if s.rps != nil && !s.rpsIgRun {
-		s.app.AddServer(s.rps)
+	if s.rpcServer != nil && !s.rpcServerIgRun {
+		s.app.AddServer(s.rpcServer)
 		s.logger.Debug("api rpc service enabled")
 	}
 	s.initEngine()
 	for _, sp := range s.services {
-		if n, err1 := sp(s.app.Context(), s.engine.Mux()); err1 != nil {
+		if n, err1 := sp(s.app.Context(), s.httpEngine.Mux()); err1 != nil {
 			failedCb(s.apiServerError(s.msg("service[", n, "] register failed"), err1))
 			return
 		} else {
@@ -247,7 +244,7 @@ func (s *Server) Run(failedCb func(error)) {
 	s.logger.Info("initialized")
 	if !s.engineIgRun {
 		go func() {
-			if err = s.engine.Http().RunAndServ(); err != nil {
+			if err = s.httpEngine.Http().RunAndServ(); err != nil {
 				failedCb(s.apiServerError(s.msg("engine run failed, err="+err.Error()), nil))
 			}
 		}()
@@ -258,40 +255,40 @@ func (s *Server) Run(failedCb func(error)) {
 func (s *Server) initEngine() {
 	if !s.engineIgInit {
 		var mid []gin.HandlerFunc
-		for _, m := range s.middlewares {
+		for _, m := range s.middlewarePds {
 			mid = append(mid, m())
 		}
 		var mmid []service.MuxRouteHandleFunc
-		for _, m := range s.muxMiddleware {
+		for _, m := range s.muxMiddlewarePds {
 			mmid = append(mmid, m())
 		}
 		var extRoutes []service.RouteProvider
-		for _, m := range s.extRoutes {
+		for _, m := range s.extRoutePds {
 			extRoutes = append(extRoutes, m())
 		}
-		server.InitRpcHttpProxyServer(s.engine.Http().Engine(), s.engine.Mux(), &server.MuxConfig{
-			PathPrefix:     s.pathPrefix,
-			MdProvider:     s.mdProvider,
-			Middlewares:    mid,
-			MuxMiddleware:  mmid,
-			ExtRoutes:      extRoutes,
-			ErrObjProvider: s.errObjProvider,
-			Debugger:       s.app.Debugger(),
+		server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), &server.MuxConfig{
+			Version:          s.version.String(),
+			MdProvider:       s.mdProvider,
+			MiddlewarePds:    mid,
+			MuxMiddlewarePds: mmid,
+			ExtRoutes:        extRoutes,
+			ErrObjProvider:   s.errObjProvider,
+			Debugger:         s.app.Debugger(),
 		})
 		s.logger.Info("engine initialized(default)")
 	} else {
 		var extRoutes []service.RouteProvider
-		for _, m := range s.extRoutes {
+		for _, m := range s.extRoutePds {
 			extRoutes = append(extRoutes, m())
 		}
-		server.AddExtRoute(s.engine.Http().Engine(), extRoutes)
+		server.AddExtRoute(s.httpEngine.Http().Engine(), extRoutes)
 		s.logger.Info("engine initialized(customer)")
 	}
 }
 
 func (s *Server) initRegInfo() {
 	s.regInfo = &regCenter.RegInfo{
-		AppId:   s.app.ID(),
+		AppId:   s.app.Cluster().Id(),
 		RegType: regtype.Http,
 		ServerInfo: regCenter.ServerInfo{
 			Id:      s.id,
@@ -299,8 +296,8 @@ func (s *Server) initRegInfo() {
 			EndType: s.endType.String(),
 			Type:    s.serverType.String(),
 		},
-		Host:      s.engine.Http().Host().String(),
-		Val:       s.engine.Http().Host().String(),
+		Host:      s.httpEngine.Http().Host(),
+		Val:       s.httpEngine.Http().Host(),
 		Ttl:       s.app.RegTtl(),
 		KeyPreGen: regCenter.DefaultRegKeyPrefixGenerator(),
 	}
@@ -335,10 +332,13 @@ func (s *Server) addDoc(config *apidoc.Config) {
 	}
 	config.SetOrigin(url.Origin{
 		Protocol: config.Protocol,
-		Host:     s.engine.Http().Host(),
+		Host: url.Host{
+			Ip:   s.httpEngine.Http().Ip(),
+			Port: s.httpEngine.Http().Port(),
+		},
 	})
 	docRegInfo := &regCenter.RegInfo{
-		AppId:   s.app.ID(),
+		AppId:   s.app.Cluster().Id(),
 		RegType: regtype.Doc,
 		ServerInfo: regCenter.ServerInfo{
 			Id:      s.id,
@@ -346,7 +346,7 @@ func (s *Server) addDoc(config *apidoc.Config) {
 			Type:    s.serverType.String(),
 			EndType: config.EndType.String(),
 		},
-		Host: s.engine.Http().Host().String(),
+		Host: s.httpEngine.Http().Host(),
 		Val:  "",
 		Values: map[string]string{
 			"url":         config.Url(),
@@ -363,7 +363,10 @@ func (s *Server) addDoc(config *apidoc.Config) {
 	s.AddRoute(func() service.RouteProvider {
 		docUrl := url.Origin{
 			Protocol: "http",
-			Host:     s.engine.Http().Host(),
+			Host: url.Host{
+				Ip:   s.httpEngine.Http().Ip(),
+				Port: s.httpEngine.Http().Port(),
+			},
 		}.String() + config.Path
 		if s.logger != nil {
 			s.logger.Debug("api " + config.EndType.String() + "doc service enabled, url=" + docUrl)
@@ -432,7 +435,10 @@ func (s *Server) regGateway() error {
 			s.gatewayKey = key
 			if err = s.app.Register().Register(s.app.Context(), s.gatewayKey, url.Origin{
 				Protocol: url.HTTP,
-				Host:     s.engine.Http().Host(),
+				Host: url.Host{
+					Ip:   s.httpEngine.Http().Ip(),
+					Port: s.httpEngine.Http().Port(),
+				},
 			}.String(), s.app.RegTtl()); err != nil {
 				return s.apiServerError(s.msg("register gateway failed"), err)
 			}
@@ -443,10 +449,4 @@ func (s *Server) regGateway() error {
 
 func (s *Server) apiServerError(msg string, err error) error {
 	return utils.TitledError(utils.ToStr("api server[", s.name, "] error"), msg, err)
-}
-
-func (s *Server) addErr(err error) {
-	if err != nil {
-		s.errs = append(s.errs, err)
-	}
 }
