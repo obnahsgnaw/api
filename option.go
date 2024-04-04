@@ -83,30 +83,15 @@ func DocServer(config *apidoc.Config) Option {
 		s.addDoc(config)
 	}
 }
-func EngineIgRun(ig bool) Option {
-	return func(s *Server) {
-		s.engineIgRun = ig
-	}
-}
-func EngineIgInit(ig bool) Option {
-	return func(s *Server) {
-		s.engineIgInit = ig
-	}
-}
 func RpcServer() Option {
 	return func(s *Server) {
-		s.rpcServer = rpc.New(s.app, s.httpEngine.Http().Listener(), s.id, s.name, s.endType, rpc.NewPServer(s.id, s.serverType), rpc.RegEnable(), rpc.IgLrClose(true), rpc.IgLrServe(true))
+		s.rpcServer = rpc.New(s.app, s.httpEngine.Http().Listener(), s.id, s.name, s.endType, rpc.NewPServer(s.id, s.serverType), rpc.RegEnable())
 	}
 }
 func RpcIns(ins *rpc.Server) Option {
 	return func(s *Server) {
 		s.rpcServer = ins
 		s.rpcServer.AddRegInfo(s.id, s.name, rpc.NewPServer(s.id, s.serverType))
-	}
-}
-func RpcIgRun(ig bool) Option {
-	return func(s *Server) {
-		s.rpcServerIgRun = ig
 	}
 }
 func ErrCodePrefix(p int) Option {

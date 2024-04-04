@@ -21,16 +21,20 @@ func NewMuxPermissionMid(manager *perm.Manager, debugCb func(msg string), errHan
 		method := strings.ToLower(r.Method)
 		var err error
 		// 验证权限
-		if err = manager.Provider().Can(appId, userId, method, pattern); err != nil {
-			debugCb("perm-middleware: no perm, desc=" + err.Error())
-			errHandle(
-				apierr.ToStatusError(apierr.NewForbiddenError(apierr.PermMidNoPerm, err)),
-				marshaler.GetMarshaler(r.Header.Get("Accept")),
-				w,
-			)
-			return false
+		if !manager.Ignored(method, pattern) {
+			if err = manager.Provider().Can(appId, userId, method, pattern); err != nil {
+				debugCb("perm-middleware: no perm, desc=" + err.Error())
+				errHandle(
+					apierr.ToStatusError(apierr.NewForbiddenError(apierr.PermMidNoPerm, err)),
+					marshaler.GetMarshaler(r.Header.Get("Accept")),
+					w,
+				)
+				return false
+			} else {
+				debugCb("perm-middleware: accessed")
+			}
 		} else {
-			debugCb("perm-middleware: accessed")
+			debugCb("perm-middleware: validate ignored by ignorer")
 		}
 
 		return true

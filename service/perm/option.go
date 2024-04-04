@@ -21,3 +21,11 @@ func UserIdHeaderKey(key string) Option {
 		s.userIdHeaderKey = key
 	}
 }
+
+func IgnoreChecker(i Ignorer) Option {
+	return func(s *Manager) {
+		if i != nil {
+			s.ignoreChecker = i
+		}
+	}
+}

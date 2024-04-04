@@ -9,14 +9,16 @@ import (
 )
 
 type MuxHttp struct {
-	e   *http.Http
-	mux *runtime.ServeMux
+	e    *http.Http
+	mux  *runtime.ServeMux
+	tags map[string]struct{}
 }
 
 func New(e *http.Http, mux *runtime.ServeMux) *MuxHttp {
 	return &MuxHttp{
-		e:   e,
-		mux: mux,
+		e:    e,
+		mux:  mux,
+		tags: make(map[string]struct{}),
 	}
 }
 
@@ -34,4 +36,13 @@ func (s *MuxHttp) Http() *http.Http {
 
 func (s *MuxHttp) Mux() *runtime.ServeMux {
 	return s.mux
+}
+
+func (s *MuxHttp) Tag(name string) {
+	s.tags[name] = struct{}{}
+}
+
+func (s *MuxHttp) Tagged(name string) bool {
+	_, ok := s.tags[name]
+	return ok
 }
