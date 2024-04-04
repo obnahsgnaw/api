@@ -50,15 +50,13 @@ type Server struct {
 	mdProvider       *service.MethodMdProvider
 	errObjProvider   errobj.Provider
 	version          Version
-	engineIgRun      bool
-	engineIgInit     bool
 	regEnable        bool
-	rpcServerIgRun   bool
 	middlewarePds    map[string]func() gin.HandlerFunc
 	muxMiddlewarePds map[string]func() service.MuxRouteHandleFunc
 	extRoutePds      []func() service.RouteProvider
 	gatewayKeyGen    func() (string, error)
 	gatewayKey       string
+	running          bool
 }
 
 // ServiceProvider api service provider
@@ -212,9 +210,12 @@ func (s *Server) ErrCode() *apierr.Factory {
 }
 
 func (s *Server) Run(failedCb func(error)) {
+	if s.running {
+		return
+	}
 	var err error
 	s.logger.Info("init start...")
-	if s.rpcServer != nil && !s.rpcServerIgRun {
+	if s.rpcServer != nil {
 		s.app.AddServer(s.rpcServer)
 		s.logger.Debug("api rpc service enabled")
 	}
@@ -242,18 +243,18 @@ func (s *Server) Run(failedCb func(error)) {
 	}
 	s.logger.Info("register initialized")
 	s.logger.Info("initialized")
-	if !s.engineIgRun {
-		go func() {
-			if err = s.httpEngine.Http().RunAndServ(); err != nil {
-				failedCb(s.apiServerError(s.msg("engine run failed, err="+err.Error()), nil))
-			}
-		}()
-		s.logger.Info(utils.ToStr("server[", s.Host().String(), "] listen and serving..."))
-	}
+	go func() {
+		defer s.httpEngine.Http().CloseWithKey(s.id)
+		s.httpEngine.Http().RunAndServWithKey(s.id, func(err error) {
+			failedCb(s.apiServerError(s.msg("engine run failed, err="+err.Error()), nil))
+		})
+	}()
+	s.logger.Info(utils.ToStr("server[", s.Host().String(), "] listen and serving..."))
+	s.running = true
 }
 
 func (s *Server) initEngine() {
-	if !s.engineIgInit {
+	if !s.httpEngine.Tagged("initialized") {
 		var mid []gin.HandlerFunc
 		for _, m := range s.middlewarePds {
 			mid = append(mid, m())
@@ -275,6 +276,7 @@ func (s *Server) initEngine() {
 			ErrObjProvider:   s.errObjProvider,
 			Debugger:         s.app.Debugger(),
 		})
+		s.httpEngine.Tag("initialized")
 		s.logger.Info("engine initialized(default)")
 	} else {
 		var extRoutes []service.RouteProvider
@@ -319,6 +321,7 @@ func (s *Server) Release() {
 		_ = s.logger.Sync()
 		s.logger.Info("released")
 	}
+	s.running = false
 }
 
 func (s *Server) addDoc(config *apidoc.Config) {

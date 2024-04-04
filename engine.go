@@ -13,13 +13,17 @@ import (
 func NewEngine(app *application.Application, id string, et endtype.EndType, host url.Host, cnf *engine2.Config) (e *engine.MuxHttp, err error) {
 	cnf.Name = utils.ToStr(et.String(), "-", id)
 	if cnf.AccessWriter == nil {
-		cnf.AccessWriter, err = logger.NewDefAccessWriter(app.LogConfig(), app.Debugger().Debug())
+		cnf.AccessWriter, err = logger.NewDefAccessWriter(app.LogConfig(), func() bool {
+			return app.Debugger().Debug()
+		})
 		if err != nil {
 			return nil, err
 		}
 	}
 	if cnf.ErrWriter == nil {
-		cnf.ErrWriter, err = logger.NewErrorWriter(app.LogConfig(), app.Debugger().Debug())
+		cnf.ErrWriter, err = logger.NewDefErrorWriter(app.LogConfig(), func() bool {
+			return app.Debugger().Debug()
+		})
 		if err != nil {
 			return nil, err
 		}

@@ -31,8 +31,6 @@ func main() {
 	r, _ := regCenter.NewEtcdRegister([]string{"127.0.0.1:2379"}, time.Second*5)
 	app.With(application.Register(r, 5))
 
-	//errhandler.SetDefaultDebugger()
-	//errhandler.SetDefaultErrObjProvider()
 	//jwt.SetKeyPrefix()
 
 	e, _ := api.NewEngine(app, "auth", endtype.Backend, url.Host{Ip: "127.0.0.1", Port: 8001}, &engine2.Config{})
