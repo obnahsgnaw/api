@@ -81,7 +81,6 @@ func New(app *application.Application, e *engine.MuxHttp, id, name string, et en
 		logCnf:           app.LogConfig(),
 		logger:           app.Logger().Named(utils.ToStr(servertype.Api.String(), "-", et.String(), "-", id)),
 	}
-	s.initRegInfo()
 	s.With(options...)
 	return s
 }
@@ -215,6 +214,7 @@ func (s *Server) Run(failedCb func(error)) {
 	}
 	var err error
 	s.logger.Info("init start...")
+	s.initRegInfo()
 	if s.rpcServer != nil {
 		s.app.AddServer(s.rpcServer)
 		s.logger.Debug("api rpc service enabled")
