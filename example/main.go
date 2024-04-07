@@ -33,7 +33,9 @@ func main() {
 
 	//jwt.SetKeyPrefix()
 
-	e, _ := api.NewEngine(app, "auth", endtype.Backend, url.Host{Ip: "127.0.0.1", Port: 8001}, &engine2.Config{})
+	e, _ := api.NewEngine(app, url.Host{Ip: "127.0.0.1", Port: 8001}, &engine2.Config{
+		Name: endtype.Backend.String() + "-auth",
+	})
 	s := api.New(app, e, "auth", "auth", endtype.Backend, 1,
 		api.RpcServer(),
 		api.ErrCodePrefix(1),
