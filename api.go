@@ -79,7 +79,7 @@ func New(app *application.Application, e *engine.MuxHttp, id, name string, et en
 		middlewarePds:    make(map[string]func() gin.HandlerFunc),
 		muxMiddlewarePds: make(map[string]func() service.MuxRouteHandleFunc),
 		logCnf:           app.LogConfig(),
-		logger:           app.Logger().Named(utils.ToStr(servertype.Api.String(), "-", et.String(), "-", id)),
+		logger:           app.Logger().Named(utils.ToStr(id, "-", et.String(), "-", servertype.Api.String())),
 	}
 	s.With(options...)
 	return s

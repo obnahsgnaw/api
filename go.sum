@@ -71,8 +71,8 @@ github.com/obnahsgnaw/grpc-gateway/v2 v2.16.0 h1:1fmQWT4TvhsY9E6V2TmQc0Kx3f+TMfl
 github.com/obnahsgnaw/grpc-gateway/v2 v2.16.0/go.mod h1:O8ZxJqrVVbspjVrm7nkTnxbX88CZN/7IzQKWlgloeV4=
 github.com/obnahsgnaw/http v0.2.6 h1:BiDvpM9kBU09fs42vNif9gOKW6yRrosqi3aOXcShg3U=
 github.com/obnahsgnaw/http v0.2.6/go.mod h1:Q2hcEpUDFA/7vlAsyL8vGTQgZmx30Ihz9HFl6SfQ0Wg=
-github.com/obnahsgnaw/rpc v0.6.4 h1:Q4nm0I+Z8yev6yzHtMrHVgVQ1eU1m/2Z3+OMAzib+S8=
-github.com/obnahsgnaw/rpc v0.6.4/go.mod h1:mWC8aYZQVPV6Rg7IFU59ryFGXdYEDXPEWxz95Sr1iyE=
+github.com/obnahsgnaw/rpc v0.6.5 h1:6WJa7lxOOQnLNRA8nFJdYgORXpjozTje0/rrQxQNTbk=
+github.com/obnahsgnaw/rpc v0.6.5/go.mod h1:mWC8aYZQVPV6Rg7IFU59ryFGXdYEDXPEWxz95Sr1iyE=
 github.com/onsi/ginkgo v1.16.5 h1:8xi0RTUf59SOSfEtZMvwTvXYMzG4gV23XVHOZiXNtnE=
 github.com/onsi/gomega v1.18.1 h1:M1GfJqGRrBrrGGsbxzV5dqM2U2ApXefZCQpkukxYRLE=
 github.com/pelletier/go-toml/v2 v2.0.8 h1:0ctb6s9mE31h0/lhu+J6OPmVeDxJn+kYnJc2jZR9tGQ=
