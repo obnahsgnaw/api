@@ -1,4 +1,12 @@
 
+<a name="v0.28.6"></a>
+## [v0.28.6](https://8.140.161.172/wangsb/wgateway/compare/v0.28.5...v0.28.6) (2024-04-16)
+
+### Features
+
+* **api:** added prefix for gin and no prefix for mux
+
+
 <a name="v0.28.5"></a>
 ## [v0.28.5](https://8.140.161.172/wangsb/wgateway/compare/v0.28.4...v0.28.5) (2024-04-10)
 
