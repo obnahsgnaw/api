@@ -57,6 +57,8 @@ type Server struct {
 	gatewayKeyGen    func() (string, error)
 	gatewayKey       string
 	running          bool
+	replacePath      string
+	muxRoutes        []func(*runtime.ServeMux) error
 }
 
 // ServiceProvider api service provider
@@ -195,6 +197,12 @@ func (s *Server) AddRoute(route func() service.RouteProvider) {
 	s.extRoutePds = append(s.extRoutePds, route)
 }
 
+func (s *Server) AddMuxRoute(meth string, pathPattern string, h func(w http.ResponseWriter, r *http.Request, pathParams map[string]string)) {
+	s.muxRoutes = append(s.muxRoutes, func(mux *runtime.ServeMux) error {
+		return mux.HandlePath(strings.ToUpper(meth), pathPattern, h)
+	})
+}
+
 func (s *Server) AddDefIncomeMd(key string, valProvider service.MdValParser) {
 	s.mdProvider.AddDefault(key, valProvider)
 }
@@ -219,7 +227,10 @@ func (s *Server) Run(failedCb func(error)) {
 		s.app.AddServer(s.rpcServer)
 		s.logger.Debug("api rpc service enabled")
 	}
-	s.initEngine()
+	if err = s.initEngine(); err != nil {
+		failedCb(err)
+		return
+	}
 	for _, sp := range s.services {
 		if n, err1 := sp(s.app.Context(), s.httpEngine.Mux()); err1 != nil {
 			failedCb(s.apiServerError(s.msg("service[", n, "] register failed"), err1))
@@ -253,39 +264,39 @@ func (s *Server) Run(failedCb func(error)) {
 	s.running = true
 }
 
-func (s *Server) initEngine() {
-	if !s.httpEngine.Tagged("initialized") {
+func (s *Server) initEngine() error {
+	if !s.httpEngine.Tagged("http_initialized") {
 		var mid []gin.HandlerFunc
 		for _, m := range s.middlewarePds {
 			mid = append(mid, m())
 		}
+		server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), &server.MuxConfig{
+			Version:       s.version.String(),
+			MiddlewarePds: mid,
+			PrefixReplace: s.replacePath,
+		})
+		s.httpEngine.Tag("http_initialized")
+	}
+	if !s.httpEngine.Tagged("mux_initialized") {
 		var mmid []service.MuxRouteHandleFunc
 		for _, m := range s.muxMiddlewarePds {
 			mmid = append(mmid, m())
 		}
-		var extRoutes []service.RouteProvider
-		for _, m := range s.extRoutePds {
-			extRoutes = append(extRoutes, m())
-		}
-		server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), &server.MuxConfig{
-			Version:          s.version.String(),
-			MdProvider:       s.mdProvider,
-			MiddlewarePds:    mid,
-			MuxMiddlewarePds: mmid,
-			ExtRoutes:        extRoutes,
-			ErrObjProvider:   s.errObjProvider,
-			Debugger:         s.app.Debugger(),
-		})
-		s.httpEngine.Tag("initialized")
-		s.logger.Info("engine initialized(default)")
-	} else {
-		var extRoutes []service.RouteProvider
-		for _, m := range s.extRoutePds {
-			extRoutes = append(extRoutes, m())
-		}
-		server.AddExtRoute(s.httpEngine.Http().Engine(), extRoutes)
-		s.logger.Info("engine initialized(customer)")
+		server.InitMux(s.httpEngine.Mux(), s.mdProvider, mmid, s.errObjProvider, s.app.Debugger())
+		s.httpEngine.Tag("mux_initialized")
 	}
+	var extRoutes []service.RouteProvider
+	for _, m := range s.extRoutePds {
+		extRoutes = append(extRoutes, m())
+	}
+	server.AddExtRoute(s.httpEngine.Http().Engine(), extRoutes)
+	for _, m := range s.muxRoutes {
+		if err := m(s.httpEngine.Mux()); err != nil {
+			return err
+		}
+	}
+	s.logger.Info("engine initialized")
+	return nil
 }
 
 func (s *Server) initRegInfo() {

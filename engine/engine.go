@@ -21,6 +21,17 @@ func New(e *http.Http, mux *runtime.ServeMux) *MuxHttp {
 		tags: make(map[string]struct{}),
 	}
 }
+func NewWithHttp(e *http.Http, initialized bool) *MuxHttp {
+	s := &MuxHttp{
+		e:    e,
+		mux:  server.NewMux(),
+		tags: make(map[string]struct{}),
+	}
+	if initialized {
+		s.Tag("http_initialized")
+	}
+	return s
+}
 
 func Default(host url.Host, cnf *engine.Config) (*MuxHttp, error) {
 	if e, err := http.Default(host.Ip, host.Port, cnf); err != nil {

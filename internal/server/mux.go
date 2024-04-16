@@ -12,10 +12,10 @@ import (
 	"net/http"
 )
 
-func newMux() *runtime.ServeMux {
+func NewMux() *runtime.ServeMux {
 	return runtime.NewServeMux()
 }
-func initMux(mux *runtime.ServeMux, mdProviders *service.MethodMdProvider, middlewares []service.MuxRouteHandleFunc, p errobj.Provider, debugger debug.Debugger) {
+func InitMux(mux *runtime.ServeMux, mdProviders *service.MethodMdProvider, middlewares []service.MuxRouteHandleFunc, p errobj.Provider, debugger debug.Debugger) {
 	ops := []runtime.ServeMuxOption{
 		runtime.WithIncomingHeaderMatcher(func(s string) (string, bool) {
 			return "", false
