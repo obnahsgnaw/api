@@ -9,6 +9,7 @@ import (
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/application/service/regCenter"
 	engine2 "github.com/obnahsgnaw/http/engine"
+	"net/http"
 	"time"
 )
 
@@ -53,6 +54,11 @@ func main() {
 			EndType: endtype.Backend,
 		}),
 	)
+	s.With(api.ReplacePath("auth"))
+	s.AddMuxRoute("GET", "/v1/test", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		w.Write([]byte("ok"))
+	})
+	// curl 127.0.0.1:8001/v1/auth/test => /v1/test
 
 	app.AddServer(s)
 
