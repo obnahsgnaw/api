@@ -83,6 +83,7 @@ func New(app *application.Application, e *engine.MuxHttp, id, name string, et en
 		logCnf:           app.LogConfig(),
 		logger:           app.Logger().Named(utils.ToStr(id, "-", et.String(), "-", servertype.Api.String())),
 	}
+	e.Http().AddInitializer(s.initHttp)
 	s.With(options...)
 	return s
 }
@@ -264,7 +265,7 @@ func (s *Server) Run(failedCb func(error)) {
 	s.running = true
 }
 
-func (s *Server) initEngine() error {
+func (s *Server) initHttp() error {
 	var mid []gin.HandlerFunc
 	for _, m := range s.middlewarePds {
 		mid = append(mid, m())
@@ -275,26 +276,28 @@ func (s *Server) initEngine() error {
 		PrefixReplace: s.replacePath,
 	})
 
-	if !s.httpEngine.Tagged("mux_initialized") {
-		var mmid []service.MuxRouteHandleFunc
-		for _, m := range s.muxMiddlewarePds {
-			mmid = append(mmid, m())
-		}
-		server.InitMux(s.httpEngine.Mux(), s.mdProvider, mmid, s.errObjProvider, s.app.Debugger())
-		s.httpEngine.Tag("mux_initialized")
-	}
-
 	var extRoutes []service.RouteProvider
 	for _, m := range s.extRoutePds {
 		extRoutes = append(extRoutes, m())
 	}
 	server.AddExtRoute(s.httpEngine.Http().Engine(), extRoutes)
+	s.logger.Info("engine initialized")
+	return nil
+}
+
+func (s *Server) initEngine() error {
+	var mmid []service.MuxRouteHandleFunc
+	for _, m := range s.muxMiddlewarePds {
+		mmid = append(mmid, m())
+	}
+	server.InitMux(s.httpEngine.Mux(), s.mdProvider, mmid, s.errObjProvider, s.app.Debugger())
+
 	for _, m := range s.muxRoutes {
 		if err := m(s.httpEngine.Mux()); err != nil {
 			return err
 		}
 	}
-	s.logger.Info("engine initialized")
+	s.logger.Info("mux initialized")
 	return nil
 }
 
