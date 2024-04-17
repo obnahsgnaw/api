@@ -265,18 +265,16 @@ func (s *Server) Run(failedCb func(error)) {
 }
 
 func (s *Server) initEngine() error {
-	if !s.httpEngine.Tagged("http_initialized") {
-		var mid []gin.HandlerFunc
-		for _, m := range s.middlewarePds {
-			mid = append(mid, m())
-		}
-		server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), &server.MuxConfig{
-			Version:       s.version.String(),
-			MiddlewarePds: mid,
-			PrefixReplace: s.replacePath,
-		})
-		s.httpEngine.Tag("http_initialized")
+	var mid []gin.HandlerFunc
+	for _, m := range s.middlewarePds {
+		mid = append(mid, m())
 	}
+	server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), &server.MuxConfig{
+		Version:       s.version.String(),
+		MiddlewarePds: mid,
+		PrefixReplace: s.replacePath,
+	})
+
 	if !s.httpEngine.Tagged("mux_initialized") {
 		var mmid []service.MuxRouteHandleFunc
 		for _, m := range s.muxMiddlewarePds {
@@ -285,6 +283,7 @@ func (s *Server) initEngine() error {
 		server.InitMux(s.httpEngine.Mux(), s.mdProvider, mmid, s.errObjProvider, s.app.Debugger())
 		s.httpEngine.Tag("mux_initialized")
 	}
+
 	var extRoutes []service.RouteProvider
 	for _, m := range s.extRoutePds {
 		extRoutes = append(extRoutes, m())
