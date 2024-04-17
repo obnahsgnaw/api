@@ -14,30 +14,19 @@ type MuxHttp struct {
 	tags map[string]struct{}
 }
 
-func New(e *http.Http, mux *runtime.ServeMux) *MuxHttp {
+func New(e *http.Http) *MuxHttp {
 	return &MuxHttp{
-		e:    e,
-		mux:  mux,
-		tags: make(map[string]struct{}),
-	}
-}
-func NewWithHttp(e *http.Http, initialized bool) *MuxHttp {
-	s := &MuxHttp{
 		e:    e,
 		mux:  server.NewMux(),
 		tags: make(map[string]struct{}),
 	}
-	if initialized {
-		s.Tag("http_initialized")
-	}
-	return s
 }
 
 func Default(host url.Host, cnf *engine.Config) (*MuxHttp, error) {
 	if e, err := http.Default(host.Ip, host.Port, cnf); err != nil {
 		return nil, err
 	} else {
-		return New(e, server.NewMux()), nil
+		return New(e), nil
 	}
 }
 
