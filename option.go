@@ -99,3 +99,8 @@ func ErrCodePrefix(p int) Option {
 		s.errFactory = apierr.New(p)
 	}
 }
+func WithoutRoutePrefix() Option {
+	return func(s *Server) {
+		s.withoutRoutePrefix = true
+	}
+}
