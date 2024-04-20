@@ -54,9 +54,11 @@ func main() {
 			EndType: endtype.Backend,
 		}),
 	)
-	s.With(api.ReplacePath("auth"))
-	s.AddMuxRoute("GET", "/v1/test", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
-		w.Write([]byte("ok"))
+	s.AddMuxRoute("GET", "/v1/{test}", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		w.Write([]byte(pathParams["test"]))
+	})
+	s.AddMuxStaticRoute("GET", "/v1/admin", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		w.Write([]byte(pathParams["path"]))
 	})
 	// curl 127.0.0.1:8001/v1/auth/test => /v1/test
 

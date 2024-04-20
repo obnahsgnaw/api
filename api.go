@@ -57,8 +57,8 @@ type Server struct {
 	gatewayKeyGen    func() (string, error)
 	gatewayKey       string
 	running          bool
-	replacePath      string
 	muxRoutes        []func(*runtime.ServeMux) error
+	staticRoutes     server.StaticRoute
 }
 
 // ServiceProvider api service provider
@@ -82,6 +82,7 @@ func New(app *application.Application, e *engine.MuxHttp, id, name string, et en
 		muxMiddlewarePds: make(map[string]func() service.MuxRouteHandleFunc),
 		logCnf:           app.LogConfig(),
 		logger:           app.Logger().Named(utils.ToStr(id, "-", et.String(), "-", servertype.Api.String())),
+		staticRoutes:     server.NewStaticRoute(),
 	}
 	e.Http().AddInitializer(s.initHttp)
 	s.With(options...)
@@ -198,9 +199,21 @@ func (s *Server) AddRoute(route func() service.RouteProvider) {
 	s.extRoutePds = append(s.extRoutePds, route)
 }
 
+// AddMuxRoute MuxRoute need add id prefix to access
 func (s *Server) AddMuxRoute(meth string, pathPattern string, h func(w http.ResponseWriter, r *http.Request, pathParams map[string]string)) {
 	s.muxRoutes = append(s.muxRoutes, func(mux *runtime.ServeMux) error {
 		return mux.HandlePath(strings.ToUpper(meth), pathPattern, h)
+	})
+}
+
+// AddMuxStaticRoute 文件路由，pathPattern 需要为 /xx/{path}
+func (s *Server) AddMuxStaticRoute(meth string, pathPattern string, h func(w http.ResponseWriter, r *http.Request, pathParams map[string]string)) {
+	s.staticRoutes.Add(meth, pathPattern)
+	s.AddMuxRoute(meth, pathPattern+"/{path}", func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+		if _, ok := pathParams["path"]; ok {
+			pathParams["path"] = s.staticRoutes.Decode(pathParams["path"])
+		}
+		h(w, r, pathParams)
 	})
 }
 
@@ -270,11 +283,7 @@ func (s *Server) initHttp() error {
 	for _, m := range s.middlewarePds {
 		mid = append(mid, m())
 	}
-	server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), &server.MuxConfig{
-		Version:       s.version.String(),
-		MiddlewarePds: mid,
-		PrefixReplace: s.replacePath,
-	})
+	server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), s.id, s.version.String(), mid, s.staticRoutes)
 
 	var extRoutes []service.RouteProvider
 	for _, m := range s.extRoutePds {

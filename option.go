@@ -99,8 +99,3 @@ func ErrCodePrefix(p int) Option {
 		s.errFactory = apierr.New(p)
 	}
 }
-func ReplacePath(p string) Option {
-	return func(s *Server) {
-		s.replacePath = p
-	}
-}
