@@ -53,11 +53,14 @@ func (s StaticRoute) Match(c *gin.Context) {
 }
 
 // InitRpcHttpProxyServer 创建一个rpc服务的http代理服务
-func InitRpcHttpProxyServer(e *gin.Engine, mux *runtime.ServeMux, project string, version string, middlewares []gin.HandlerFunc, staticRoutes StaticRoute) {
+func InitRpcHttpProxyServer(e *gin.Engine, mux *runtime.ServeMux, project string, version string, middlewares []gin.HandlerFunc, staticRoutes StaticRoute, withoutRoutePrefix bool) {
 	e.Use(authmid.NewRqIdMid())
 	version = "/" + strings.Trim(version, "/")
 	prefix := version + "/" + project
-	middlewares = append([]gin.HandlerFunc{replaceMid(prefix, version, staticRoutes)}, middlewares...)
+	if withoutRoutePrefix {
+		prefix = version
+	}
+	middlewares = append([]gin.HandlerFunc{replaceMid(prefix, version, staticRoutes, withoutRoutePrefix)}, middlewares...)
 	e.GET(prefix, append(append([]gin.HandlerFunc{}, middlewares...), gin.WrapH(mux))...)
 	e.Group(prefix+"/*gw", middlewares...).Any("", gin.WrapH(mux))
 }
@@ -67,9 +70,9 @@ func AddExtRoute(e *gin.Engine, routes []service.RouteProvider) {
 		rp(e)
 	}
 }
-func replaceMid(prefix, version string, staticRoute StaticRoute) gin.HandlerFunc {
+func replaceMid(prefix, version string, staticRoute StaticRoute, withoutRoutePrefix bool) gin.HandlerFunc {
 	return func(context *gin.Context) {
-		if strings.HasPrefix(context.Request.RequestURI, prefix) {
+		if !withoutRoutePrefix && strings.HasPrefix(context.Request.RequestURI, prefix) {
 			context.Request.RequestURI = strings.Replace(context.Request.RequestURI, prefix, version, 1)
 			context.Request.URL.Path = strings.Replace(context.Request.URL.Path, prefix, version, 1)
 			if context.Request.URL.RawPath != "" {

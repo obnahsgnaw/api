@@ -34,31 +34,32 @@ func (v Version) String() string {
 
 // Server API server
 type Server struct {
-	app              *application.Application
-	id               string // 模块
-	name             string
-	endType          endtype.EndType
-	serverType       servertype.ServerType
-	httpEngine       *engine.MuxHttp
-	errFactory       *apierr.Factory
-	rpcServer        *rpc.Server
-	logger           *zap.Logger
-	logCnf           *logger.Config
-	services         []ServiceProvider
-	regInfo          *regCenter.RegInfo
-	docRegInfos      []*regCenter.RegInfo
-	mdProvider       *service.MethodMdProvider
-	errObjProvider   errobj.Provider
-	version          Version
-	regEnable        bool
-	middlewarePds    map[string]func() gin.HandlerFunc
-	muxMiddlewarePds map[string]func() service.MuxRouteHandleFunc
-	extRoutePds      []func() service.RouteProvider
-	gatewayKeyGen    func() (string, error)
-	gatewayKey       string
-	running          bool
-	muxRoutes        []func(*runtime.ServeMux) error
-	staticRoutes     server.StaticRoute
+	app                *application.Application
+	id                 string // 模块
+	name               string
+	endType            endtype.EndType
+	serverType         servertype.ServerType
+	httpEngine         *engine.MuxHttp
+	errFactory         *apierr.Factory
+	rpcServer          *rpc.Server
+	logger             *zap.Logger
+	logCnf             *logger.Config
+	services           []ServiceProvider
+	regInfo            *regCenter.RegInfo
+	docRegInfos        []*regCenter.RegInfo
+	mdProvider         *service.MethodMdProvider
+	errObjProvider     errobj.Provider
+	version            Version
+	regEnable          bool
+	middlewarePds      map[string]func() gin.HandlerFunc
+	muxMiddlewarePds   map[string]func() service.MuxRouteHandleFunc
+	extRoutePds        []func() service.RouteProvider
+	gatewayKeyGen      func() (string, error)
+	gatewayKey         string
+	running            bool
+	muxRoutes          []func(*runtime.ServeMux) error
+	staticRoutes       server.StaticRoute
+	withoutRoutePrefix bool
 }
 
 // ServiceProvider api service provider
@@ -283,7 +284,7 @@ func (s *Server) initHttp() error {
 	for _, m := range s.middlewarePds {
 		mid = append(mid, m())
 	}
-	server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), s.id, s.version.String(), mid, s.staticRoutes)
+	server.InitRpcHttpProxyServer(s.httpEngine.Http().Engine(), s.httpEngine.Mux(), s.id, s.version.String(), mid, s.staticRoutes, s.withoutRoutePrefix)
 
 	var extRoutes []service.RouteProvider
 	for _, m := range s.extRoutePds {

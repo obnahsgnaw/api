@@ -61,6 +61,7 @@ func main() {
 		w.Write([]byte(pathParams["path"]))
 	})
 	// curl 127.0.0.1:8001/v1/auth/test => /v1/test
+	// s.With(api.WithoutRoutePrefix())
 
 	app.AddServer(s)
 
