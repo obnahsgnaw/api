@@ -1,4 +1,12 @@
 
+<a name="v0.28.12"></a>
+## [v0.28.12](https://8.140.161.172/wangsb/wgateway/compare/v0.28.11...v0.28.12) (2024-04-20)
+
+### Features
+
+* **api:** added static mux route
+
+
 <a name="v0.28.11"></a>
 ## [v0.28.11](https://8.140.161.172/wangsb/wgateway/compare/v0.28.10...v0.28.11) (2024-04-17)
 
