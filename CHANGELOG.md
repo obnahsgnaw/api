@@ -1,4 +1,12 @@
 
+<a name="v0.28.14"></a>
+## [v0.28.14](https://8.140.161.172/wangsb/wgateway/compare/v0.28.13...v0.28.14) (2024-07-19)
+
+### Features
+
+* **doc:** added sort support
+
+
 <a name="v0.28.13"></a>
 ## [v0.28.13](https://8.140.161.172/wangsb/wgateway/compare/v0.28.12...v0.28.13) (2024-04-20)
 
