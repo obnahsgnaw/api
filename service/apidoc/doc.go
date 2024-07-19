@@ -16,6 +16,7 @@ type Config struct {
 	EndType      endtype.EndType
 	RegTtl       int64
 	RegKeyPreGen regCenter.RegKeyPrefixGenerator
+	Sort         int
 }
 
 func (c *Config) SetOrigin(origin url.Origin) {

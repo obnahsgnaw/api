@@ -378,6 +378,7 @@ func (s *Server) addDoc(config *apidoc.Config) {
 			"url":         config.Url(),
 			"debugOrigin": config.DebugOrigin.String(),
 			"title":       config.Title,
+			"sort":        strconv.Itoa(config.Sort),
 		},
 		Ttl:       config.RegTtl,
 		KeyPreGen: config.RegKeyPreGen,
