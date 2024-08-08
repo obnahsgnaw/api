@@ -25,6 +25,10 @@ func (e ApiError) Error() string {
 
 // NewApiErr 创建新的 app error
 func NewApiErr(status HttpStatus, code ErrCode, err error) *ApiError {
+	var e *ApiError
+	if errors.As(err, &e) && e.StatusCode == status && e.ErrCode.code == code.code { // 重复包裹时
+		return e
+	}
 	return &ApiError{
 		StatusCode: status,
 		ErrCode:    code,
