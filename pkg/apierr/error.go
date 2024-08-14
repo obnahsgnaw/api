@@ -27,6 +27,10 @@ func (e ApiError) SetTarget(k, v string) {
 	e.ErrCode = e.ErrCode.WithTarget(k, v)
 }
 
+func (e ApiError) SetLocal(local string) {
+	e.ErrCode = e.ErrCode.WithLocal(local)
+}
+
 // NewApiErr 创建新的 app error
 func NewApiErr(status HttpStatus, code ErrCode, err error) *ApiError {
 	var e *ApiError
@@ -117,4 +121,13 @@ func ToStatusError(err error) *runtime.HTTPStatusError {
 		HTTPStatus: apiErr.StatusCode.Value(),
 		Err:        apiErr,
 	}
+}
+
+func SetLocal(err error, local string) error {
+	var errr *ApiError
+	if errors.As(err, &errr) {
+		errr.SetLocal(local)
+		return errr
+	}
+	return err
 }
