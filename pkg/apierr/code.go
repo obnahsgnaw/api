@@ -20,14 +20,18 @@ var (
 
 // ErrCode 错误码
 type ErrCode struct {
-	common    bool
-	code      uint32
-	projectId string
-	msgHandle ErrMsgHandler
+	common        bool
+	code          uint32
+	projectId     string
+	messageHandle MessageHandler
+	tmp           map[string]string
 }
 
 // ErrMsgHandler error message handler
 type ErrMsgHandler func(params []interface{}) string
+
+// MessageHandler error message handler
+type MessageHandler func(e ErrCode, params []interface{}) string
 
 type Factory struct {
 	projectId string
@@ -43,7 +47,18 @@ func (f *Factory) NewErrCode(code uint32, msgHandler ErrMsgHandler) ErrCode {
 	return ErrCode{
 		projectId: f.projectId,
 		code:      code,
-		msgHandle: msgHandler,
+		messageHandle: func(e ErrCode, params []interface{}) string {
+			return msgHandler(params)
+		},
+	}
+}
+
+// NewErrorCode return a new ErrCode
+func (f *Factory) NewErrorCode(code uint32, msgHandler MessageHandler) ErrCode {
+	return ErrCode{
+		projectId:     f.projectId,
+		code:          code,
+		messageHandle: msgHandler,
 	}
 }
 
@@ -60,7 +75,7 @@ func (f *Factory) NewMsgErrCode(code uint32, msg string) ErrCode {
 	return ErrCode{
 		projectId: f.projectId,
 		code:      code,
-		msgHandle: func(params []interface{}) string {
+		messageHandle: func(e ErrCode, params []interface{}) string {
 			return msg
 		},
 	}
@@ -76,7 +91,7 @@ func newCommonErrCode(code uint32, msg string) ErrCode {
 		projectId: "",
 		common:    true,
 		code:      code,
-		msgHandle: func(params []interface{}) string {
+		messageHandle: func(e ErrCode, params []interface{}) string {
 			return msg
 		},
 	}
@@ -97,9 +112,40 @@ func (c ErrCode) Message(params []interface{}, replaceMsg string) string {
 	if replaceMsg != "" {
 		return replaceMsg
 	}
-	if c.msgHandle != nil {
-		return c.msgHandle(params)
+	if c.messageHandle != nil {
+		return c.messageHandle(c, params)
 	}
 
 	return "internal error"
+}
+
+func (c ErrCode) WithTarget(key, val string) ErrCode {
+	if c.tmp == nil {
+		c.tmp = make(map[string]string)
+	}
+	c.tmp[key] = val
+	return c
+}
+
+func (c ErrCode) Target(key string) string {
+	if c.tmp == nil {
+		return ""
+	}
+	v, ok := c.tmp[key]
+	if ok {
+		return v
+	}
+	return ""
+}
+
+func (c ErrCode) WithLocal(local string) ErrCode {
+	return c.WithTarget("local", local)
+}
+
+func (c ErrCode) Local() string {
+	t := c.Target("local")
+	if t == "" {
+		return "en"
+	}
+	return t
 }
