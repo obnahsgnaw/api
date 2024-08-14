@@ -23,6 +23,10 @@ func (e ApiError) Error() string {
 	return e.ErrCode.Message(e.Replace, e.Message)
 }
 
+func (e ApiError) SetTarget(k, v string) {
+	e.ErrCode = e.ErrCode.WithTarget(k, v)
+}
+
 // NewApiErr 创建新的 app error
 func NewApiErr(status HttpStatus, code ErrCode, err error) *ApiError {
 	var e *ApiError
@@ -51,6 +55,11 @@ func NewValidateError(message string) *ApiError {
 	e := NewApiErr(StatusBadRequest, ValidateFailed, nil)
 	e.Message = message
 	return e
+}
+
+// NewTargetValidateError 验证错误
+func NewTargetValidateError(target string) *ApiError {
+	return NewApiErr(StatusBadRequest, ValidateFailed.WithTarget("target", target), nil)
 }
 
 // NewBadRequestError 验证错误
