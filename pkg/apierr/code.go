@@ -1,6 +1,7 @@
 package apierr
 
 import (
+	"github.com/obnahsgnaw/api/pkg/apierr/errmsg"
 	"strconv"
 )
 
@@ -20,11 +21,11 @@ var (
 
 // ErrCode 错误码
 type ErrCode struct {
-	common        bool
-	code          uint32
-	projectId     string
-	messageHandle MessageHandler
-	tmp           map[string]string
+	common        bool              // common类型code不加项目前缀
+	code          uint32            // 错误吗
+	projectId     string            // 项目id
+	messageHandle MessageHandler    // 消息处理器
+	tmp           map[string]string // 临时数据
 }
 
 // ErrMsgHandler error message handler
@@ -33,68 +34,18 @@ type ErrMsgHandler func(params []interface{}) string
 // MessageHandler error message handler
 type MessageHandler func(e ErrCode, params []interface{}) string
 
-type Factory struct {
-	projectId string
-}
-
-// New return a new ErrCode factory
-func New(projectId int) *Factory {
-	return &Factory{projectId: strconv.Itoa(projectId)}
-}
-
-// NewErrCode return a new ErrCode
-func (f *Factory) NewErrCode(code uint32, msgHandler ErrMsgHandler) ErrCode {
-	return ErrCode{
-		projectId: f.projectId,
-		code:      code,
-		messageHandle: func(e ErrCode, params []interface{}) string {
-			return msgHandler(params)
-		},
+func DefaultMessageHandler(msg *errmsg.LocalMessage, e ErrCode, params []interface{}, defaultMsg string) string {
+	target := e.Target("target")
+	if target == "" {
+		target = strconv.Itoa(int(e.code))
+	} else {
+		target = strconv.Itoa(int(e.code)) + "." + target
 	}
-}
-
-// NewErrorCode return a new ErrCode
-func (f *Factory) NewErrorCode(code uint32, msgHandler MessageHandler) ErrCode {
-	return ErrCode{
-		projectId:     f.projectId,
-		code:          code,
-		messageHandle: msgHandler,
+	str := msg.Translate(errmsg.Language(e.Local()), target, params...)
+	if str == target && defaultMsg != "" {
+		return defaultMsg
 	}
-}
-
-// NewStdErrCode return a new ErrCode with no message handler
-func (f *Factory) NewStdErrCode(code uint32) ErrCode {
-	return ErrCode{
-		projectId: f.projectId,
-		code:      code,
-	}
-}
-
-// NewMsgErrCode return a ErrCode with string message
-func (f *Factory) NewMsgErrCode(code uint32, msg string) ErrCode {
-	return ErrCode{
-		projectId: f.projectId,
-		code:      code,
-		messageHandle: func(e ErrCode, params []interface{}) string {
-			return msg
-		},
-	}
-}
-
-// NewCommonErrCode return a common ErrCode
-func (f *Factory) NewCommonErrCode(code uint32, msg string) ErrCode {
-	return newCommonErrCode(code, msg)
-}
-
-func newCommonErrCode(code uint32, msg string) ErrCode {
-	return ErrCode{
-		projectId: "",
-		common:    true,
-		code:      code,
-		messageHandle: func(e ErrCode, params []interface{}) string {
-			return msg
-		},
-	}
+	return str
 }
 
 // Code 值
@@ -148,4 +99,59 @@ func (c ErrCode) Local() string {
 		return "en"
 	}
 	return t
+}
+
+// ------------------------------------------------------------------------
+
+type Factory struct {
+	projectId string
+}
+
+// New return a new ErrCode factory
+func New(projectId int) *Factory {
+	return &Factory{projectId: strconv.Itoa(projectId)}
+}
+
+// NewErrCode return a new ErrCode
+func (f *Factory) NewErrCode(code uint32, msgHandler ErrMsgHandler) ErrCode {
+	return f.NewErrorCode(code, func(e ErrCode, params []interface{}) string {
+		return msgHandler(params)
+	})
+}
+
+// NewErrorCode return a new ErrCode
+func (f *Factory) NewErrorCode(code uint32, msgHandler MessageHandler) ErrCode {
+	return ErrCode{
+		projectId:     f.projectId,
+		code:          code,
+		messageHandle: msgHandler,
+	}
+}
+
+// NewStdErrCode return a new ErrCode with no message handler
+func (f *Factory) NewStdErrCode(code uint32) ErrCode {
+	return f.NewErrorCode(code, nil)
+}
+
+// NewMsgErrCode return a ErrCode with string message
+func (f *Factory) NewMsgErrCode(code uint32, msg string) ErrCode {
+	return f.NewErrorCode(code, func(e ErrCode, params []interface{}) string {
+		return msg
+	})
+}
+
+// NewCommonErrCode return a common ErrCode
+func (f *Factory) NewCommonErrCode(code uint32, msg string) ErrCode {
+	return newCommonErrCode(code, msg)
+}
+
+func newCommonErrCode(code uint32, msg string) ErrCode {
+	return ErrCode{
+		projectId: "",
+		common:    true,
+		code:      code,
+		messageHandle: func(e ErrCode, params []interface{}) string {
+			return DefaultMessageHandler(ErrMsg, e, params, msg)
+		},
+	}
 }
