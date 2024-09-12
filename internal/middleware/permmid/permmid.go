@@ -20,6 +20,7 @@ func NewMuxPermissionMid(manager *perm.Manager, debugCb func(msg string), errHan
 		userId := r.Header.Get(manager.UserIdHeaderKey())
 		method := strings.ToLower(r.Method)
 		var err error
+		pattern = manager.PatternFormat(r, pattern)
 		// 验证权限
 		if !manager.Ignored(method, pattern) {
 			if err = manager.Provider().Can(appId, userId, method, pattern); err != nil {

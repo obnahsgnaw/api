@@ -29,3 +29,11 @@ func IgnoreChecker(i Ignorer) Option {
 		}
 	}
 }
+
+func formater(i Formatter) Option {
+	return func(s *Manager) {
+		if i != nil {
+			s.patternFormater = i
+		}
+	}
+}
