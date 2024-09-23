@@ -39,9 +39,9 @@ type MessageHandler func(e ErrCode, params []interface{}) string
 func DefaultMessageHandler(msg *errmsg.LocalMessage, e ErrCode, params []interface{}, defaultMsg string) string {
 	target := e.Target("target")
 	if target == "" {
-		target = strconv.Itoa(int(e.code))
+		target = strconv.Itoa(int(e.Code()))
 	} else {
-		target = strconv.Itoa(int(e.code)) + "." + target
+		target = strconv.Itoa(int(e.Code())) + "." + target
 	}
 	str := msg.Translate(errmsg.Language(e.Local()), target, params...)
 	if str == target && defaultMsg != "" {

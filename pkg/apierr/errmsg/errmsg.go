@@ -22,7 +22,7 @@ type LocalMessage struct {
 
 func (s *LocalMessage) SetDefaultLanguage(l Language) {
 	if l != "" {
-
+		s.defLanguage = l
 	}
 }
 
@@ -80,6 +80,16 @@ func (s *LocalMessage) Translate(lang Language, target string, params ...interfa
 	}
 
 	return target
+}
+
+func (s *LocalMessage) Merge(l *LocalMessage) {
+	for lang, langMsgs := range l.data {
+		if _, ok := s.data[lang]; !ok {
+			s.data[lang] = langMsgs
+		} else {
+			s.data[lang] = append(s.data[lang], langMsgs...)
+		}
+	}
 }
 
 func New() *LocalMessage {
