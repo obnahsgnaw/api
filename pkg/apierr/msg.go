@@ -9,5 +9,5 @@ func init() {
 }
 
 func SetDefaultMsg(message *errmsg.LocalMessage) {
-	ErrMsg = message
+	ErrMsg.Merge(message)
 }
