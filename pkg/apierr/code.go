@@ -3,6 +3,7 @@ package apierr
 import (
 	"github.com/obnahsgnaw/api/pkg/apierr/errmsg"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 type ErrCode struct {
 	common        bool              // common类型code不加项目前缀
 	code          uint32            // 错误吗
+	projectName   string            // 项目名称
 	projectId     string            // 项目id
 	messageHandle MessageHandler    // 消息处理器
 	tmp           map[string]string // 临时数据
@@ -61,13 +63,13 @@ func (c ErrCode) Code() uint32 {
 // Message 描述文字
 func (c ErrCode) Message(params []interface{}, replaceMsg string) string {
 	if replaceMsg != "" {
-		return replaceMsg
+		return c.projectName + replaceMsg
 	}
 	if c.messageHandle != nil {
-		return c.messageHandle(c, params)
+		return c.projectName + c.messageHandle(c, params)
 	}
 
-	return "internal error"
+	return c.projectName + "internal error"
 }
 
 func (c ErrCode) WithTarget(key, val string) ErrCode {
@@ -104,12 +106,22 @@ func (c ErrCode) Local() string {
 // ------------------------------------------------------------------------
 
 type Factory struct {
-	projectId string
+	projectName string
+	projectId   string
 }
 
 // New return a new ErrCode factory
 func New(projectId int) *Factory {
 	return &Factory{projectId: strconv.Itoa(projectId)}
+}
+
+func (f *Factory) SetProjectName(name string) {
+	if name != "" {
+		if !strings.HasSuffix(name, ":") {
+			name = name + ":"
+		}
+		f.projectName = name
+	}
 }
 
 // NewErrCode return a new ErrCode
@@ -122,6 +134,7 @@ func (f *Factory) NewErrCode(code uint32, msgHandler ErrMsgHandler) ErrCode {
 // NewErrorCode return a new ErrCode
 func (f *Factory) NewErrorCode(code uint32, msgHandler MessageHandler) ErrCode {
 	return ErrCode{
+		projectName:   f.projectName,
 		projectId:     f.projectId,
 		code:          code,
 		messageHandle: msgHandler,
@@ -147,9 +160,10 @@ func (f *Factory) NewCommonErrCode(code uint32, msg string) ErrCode {
 
 func newCommonErrCode(code uint32, msg string) ErrCode {
 	return ErrCode{
-		projectId: "",
-		common:    true,
-		code:      code,
+		projectName: "",
+		projectId:   "",
+		common:      true,
+		code:        code,
 		messageHandle: func(e ErrCode, params []interface{}) string {
 			return DefaultMessageHandler(ErrMsg, e, params, msg)
 		},
