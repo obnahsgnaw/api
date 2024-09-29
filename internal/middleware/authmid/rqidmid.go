@@ -15,8 +15,7 @@ func NewRqIdMid() gin.HandlerFunc {
 		}
 		c.Request.Header.Set("X-Request-Type", "http")
 		c.Request.Header.Set("X-Request-From", "client")
-		c.Next()
-
 		c.Header("X-Request-Id", rqId)
+		c.Next()
 	}
 }
