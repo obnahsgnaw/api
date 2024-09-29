@@ -25,7 +25,7 @@ type Manager struct {
 
 // AppProvider app provider interface
 type AppProvider interface {
-	GetValidApp(id, project string, validate bool) (app App, err error)
+	GetValidApp(rqId, id, project string, validate bool) (app App, err error)
 }
 
 // App interface

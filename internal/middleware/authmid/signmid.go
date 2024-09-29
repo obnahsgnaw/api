@@ -19,19 +19,22 @@ func NewSignMid(manager *sign.Manager, debugCb func(msg string), errHandle func(
 		debugCb = func(msg string) {}
 	}
 	return func(c *gin.Context) {
+		rqId := c.Request.Header.Get("X-Request-ID")
+		rqType := c.Request.Header.Get("X-Request-Type")
+		logPrefix := "crypt-middleware[" + rqType + "." + rqId + "]: "
 		appId := c.GetHeader(manager.AppIdHeaderKey())
 		userId := c.GetHeader(manager.UserIdHeaderKey())
 		signStr := c.GetHeader(manager.SignHeaderKey())
 		method := c.Request.Method
 		uri := c.Request.URL.Path
 
-		debugCb("sign-middleware: sign in=" + signStr)
+		debugCb(logPrefix + "sign in=" + signStr)
 		s, t, n, err := parseSignStr(signStr)
 		if err != nil {
-			debugCb("sign-middleware: validate failed, err=" + err.Error())
+			debugCb(logPrefix + "validate failed, err=" + err.Error())
 			c.Abort()
 			errHandle(
-				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidInvalid, err)),
+				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidInvalid, err).WithRequestTypeAndId(rqType, rqId)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
 			)
@@ -39,10 +42,10 @@ func NewSignMid(manager *sign.Manager, debugCb func(msg string), errHandle func(
 		}
 		// sign check
 		if err = manager.Provider().Validate(appId, userId, method, uri, s, t, n); err != nil {
-			debugCb("sign-middleware: validate failed, err=" + err.Error())
+			debugCb(logPrefix + "validate failed, err=" + err.Error())
 			c.Abort()
 			errHandle(
-				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidInvalid, err)),
+				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidInvalid, err).WithRequestTypeAndId(rqType, rqId)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
 			)
@@ -51,17 +54,17 @@ func NewSignMid(manager *sign.Manager, debugCb func(msg string), errHandle func(
 		c.Next()
 		// sign generate
 		if s1, t1, n1, err1 := manager.Provider().Generate(appId, userId, method, uri); err1 != nil {
-			debugCb("sign-middleware: gen failed, err=" + err1.Error())
+			debugCb(logPrefix + "gen failed, err=" + err1.Error())
 			c.Abort()
 			errHandle(
-				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidGenFailed, err1)),
+				apierr.ToStatusError(apierr.NewBadRequestError(apierr.SignMidGenFailed, err1).WithRequestTypeAndId(rqType, rqId)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
 			)
 			return
 		} else {
 			signStr1 := toSignStr(s1, t1, n1)
-			debugCb("sign-middleware: sign out=" + signStr1)
+			debugCb(logPrefix + "sign out=" + signStr1)
 			c.Header(manager.SignHeaderKey(), signStr1)
 		}
 	}

@@ -3,7 +3,7 @@ package perm
 import "net/http"
 
 type Provider interface {
-	Can(appid, uid, method, pattern string) error
+	Can(rqId, appid, uid, method, pattern string) error
 }
 
 type Ignorer func(method, pattern string) bool

@@ -54,13 +54,12 @@ func (s StaticRoute) Match(c *gin.Context) {
 
 // InitRpcHttpProxyServer 创建一个rpc服务的http代理服务
 func InitRpcHttpProxyServer(e *gin.Engine, mux *runtime.ServeMux, project string, version string, middlewares []gin.HandlerFunc, staticRoutes StaticRoute, withoutRoutePrefix bool) {
-	e.Use(authmid.NewRqIdMid())
 	version = "/" + strings.Trim(version, "/")
 	prefix := version + "/" + project
 	if withoutRoutePrefix {
 		prefix = version
 	}
-	middlewares = append([]gin.HandlerFunc{replaceMid(prefix, version, staticRoutes, withoutRoutePrefix)}, middlewares...)
+	middlewares = append([]gin.HandlerFunc{authmid.NewRqIdMid(), replaceMid(prefix, version, staticRoutes, withoutRoutePrefix)}, middlewares...)
 	e.GET(prefix, append(append([]gin.HandlerFunc{}, middlewares...), gin.WrapH(mux))...)
 	e.Group(prefix+"/*gw", middlewares...).Any("", gin.WrapH(mux))
 }

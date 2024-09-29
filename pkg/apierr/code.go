@@ -18,6 +18,7 @@ var (
 	SignMidInvalid    = newCommonErrCode(15, "signature invalid")
 	SignMidGenFailed  = newCommonErrCode(16, "signature generate failed")
 	PermMidNoPerm     = newCommonErrCode(17, "no permission")
+	RpcFailed         = newCommonErrCode(18, "rpc call failed")
 )
 
 // ErrCode 错误码

@@ -24,6 +24,9 @@ func InitMux(mux *runtime.ServeMux, mdProviders *service.MethodMdProvider, middl
 		// trans header to metadata
 		runtime.WithMetadata(func(ctx context.Context, request *http.Request) metadata.MD {
 			var metaData []string
+			metaData = append(metaData, "rq_id", request.Header.Get("X-Request-Id"))
+			metaData = append(metaData, "rq_type", request.Header.Get("X-Request-Type"))
+			metaData = append(metaData, "rq_from", request.Header.Get("X-Request-From"))
 			mdProviders.Range(ctx, request, func(key, val string) {
 				metaData = append(metaData, key, val)
 			})

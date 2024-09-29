@@ -20,14 +20,16 @@ func NewAppMid(manager *authedapp.Manager, debugCb func(msg string), errHandle f
 		var app authedapp.App
 		var err error
 		rqId := c.Request.Header.Get("X-Request-Id")
+		rqType := c.Request.Header.Get("X-Request-Type")
+		logPrefix := "app-middleware[" + rqType + "." + rqId + "]: "
 		appId := c.Request.Header.Get(manager.AppidHeaderKey())
 
 		if ig, igApp := manager.Ignored(c); !ig {
-			if app, err = manager.Provider().GetValidApp(appId, manager.Project, true); err != nil {
-				debugCb("app-middleware: validate failed,err=" + err.Error())
+			if app, err = manager.Provider().GetValidApp(rqId, appId, manager.Project, true); err != nil {
+				debugCb(logPrefix + "validate failed,err=" + err.Error())
 				c.Abort()
 				errHandle(
-					apierr.ToStatusError(apierr.NewUnauthorizedError(apierr.AppMidInvalid, err)),
+					apierr.ToStatusError(apierr.NewUnauthorizedError(apierr.AppMidInvalid, err).WithRequestTypeAndId(rqType, rqId)),
 					marshaler.GetMarshaler(c.GetHeader("Accept")),
 					c.Writer,
 				)
@@ -35,11 +37,11 @@ func NewAppMid(manager *authedapp.Manager, debugCb func(msg string), errHandle f
 			}
 		} else {
 			app = igApp
-			debugCb("app-middleware: validate ignored by ignorer")
+			debugCb(logPrefix + "validate ignored by ignorer")
 		}
 		c.Request.Header.Set(manager.AppidHeaderKey(), app.AppId())
 
-		debugCb("app-middleware: accessed, id=" + app.AppId())
+		debugCb(logPrefix + "accessed, id=" + app.AppId())
 		manager.Add(rqId, app)
 
 		c.Next()
