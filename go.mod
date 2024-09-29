@@ -18,11 +18,6 @@ require (
 
 replace github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 => github.com/obnahsgnaw/grpc-gateway/v2 v2.16.0
 
-replace (
-	github.com/obnahsgnaw/http v0.2.9 => ../../projects/http
-	github.com/obnahsgnaw/rpc v0.6.10 => ../../projects/rpc
-)
-
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
