@@ -1,10 +1,22 @@
 
-<a name="v0.28.23"></a>
-## [v0.28.23](https://8.140.161.172/wangsb/wgateway/compare/v0.28.24...v0.28.23) (2024-09-29)
+<a name="v0.28.25"></a>
+## [v0.28.25](https://8.140.161.172/wangsb/wgateway/compare/v0.28.24...v0.28.25) (2024-09-29)
+
+### Bug Fixes
+
+* **x:** x
 
 
 <a name="v0.28.24"></a>
-## [v0.28.24](https://8.140.161.172/wangsb/wgateway/compare/v0.28.22...v0.28.24) (2024-09-29)
+## [v0.28.24](https://8.140.161.172/wangsb/wgateway/compare/v0.28.23...v0.28.24) (2024-09-29)
+
+### Features
+
+* **mid:** added rq-id for mid
+
+
+<a name="v0.28.23"></a>
+## [v0.28.23](https://8.140.161.172/wangsb/wgateway/compare/v0.28.22...v0.28.23) (2024-09-23)
 
 ### Bug Fixes
 
