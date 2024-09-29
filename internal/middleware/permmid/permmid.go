@@ -16,6 +16,9 @@ func NewMuxPermissionMid(manager *perm.Manager, debugCb func(msg string), errHan
 		debugCb = func(msg string) {}
 	}
 	return func(w http.ResponseWriter, r *http.Request, pathParams map[string]string, pattern string) bool {
+		rqId := r.Header.Get("X-Request-ID")
+		rqType := r.Header.Get("X-Request-Type")
+		logPrefix := "perm-middleware[" + rqType + "." + rqId + "]: "
 		appId := r.Header.Get(manager.AppIdHeaderKey())
 		userId := r.Header.Get(manager.UserIdHeaderKey())
 		method := strings.ToLower(r.Method)
@@ -23,19 +26,19 @@ func NewMuxPermissionMid(manager *perm.Manager, debugCb func(msg string), errHan
 		pattern = manager.PatternFormat(r, pattern)
 		// 验证权限
 		if !manager.Ignored(method, pattern) {
-			if err = manager.Provider().Can(appId, userId, method, pattern); err != nil {
-				debugCb("perm-middleware: no perm, desc=" + err.Error())
+			if err = manager.Provider().Can(rqId, appId, userId, method, pattern); err != nil {
+				debugCb(logPrefix + "no perm, desc=" + err.Error())
 				errHandle(
-					apierr.ToStatusError(apierr.NewForbiddenError(apierr.PermMidNoPerm, err)),
+					apierr.ToStatusError(apierr.NewForbiddenError(apierr.PermMidNoPerm, err).WithRequestTypeAndId(rqType, rqId)),
 					marshaler.GetMarshaler(r.Header.Get("Accept")),
 					w,
 				)
 				return false
 			} else {
-				debugCb("perm-middleware: accessed")
+				debugCb(logPrefix + "accessed")
 			}
 		} else {
-			debugCb("perm-middleware: validate ignored by ignorer")
+			debugCb(logPrefix + "validate ignored by ignorer")
 		}
 
 		return true

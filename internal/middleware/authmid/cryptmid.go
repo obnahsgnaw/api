@@ -26,18 +26,21 @@ func NewCryptMid(manager *crypt.Manager, debugCb func(msg string), errHandle fun
 		debugCb = func(msg string) {}
 	}
 	return func(c *gin.Context) {
+		rqId := c.Request.Header.Get("X-Request-ID")
+		rqType := c.Request.Header.Get("X-Request-Type")
+		logPrefix := "crypt-middleware[" + rqType + "." + rqId + "]: "
 		appId := c.GetHeader(manager.AppIdHeaderKey())
 		userId := c.GetHeader(manager.UserIdHeaderKey())
 		iv := c.GetHeader(manager.UserIvHeaderKey())
 		body, _ := io.ReadAll(c.Request.Body)
-		debugCb("crypt-middleware: body in=" + string(body))
+		debugCb(logPrefix + "body in=" + string(body))
 		// 解密
 		decrypted, err := manager.Provider().Decrypt(appId, userId, []byte(iv), body)
 		if err != nil {
-			debugCb("crypt-middleware: decrypt failed, err=" + err.Error())
+			debugCb(logPrefix + "decrypt failed, err=" + err.Error())
 			c.Abort()
 			errHandle(
-				apierr.ToStatusError(apierr.NewBadRequestError(apierr.CryptMidDecFailed, err)),
+				apierr.ToStatusError(apierr.NewBadRequestError(apierr.CryptMidDecFailed, err).WithRequestTypeAndId(rqType, rqId)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
 			)
@@ -55,16 +58,16 @@ func NewCryptMid(manager *crypt.Manager, debugCb func(msg string), errHandle fun
 		encrypted, err := manager.Provider().Encrypt(appId, userId, []byte(iv), bdWriter.body.Bytes())
 		if err != nil {
 			bdWriter.body = bytes.NewBufferString("")
-			debugCb("crypt-middleware: encrypt failed, err=" + err.Error())
+			debugCb(logPrefix + "encrypt failed, err=" + err.Error())
 			c.Abort()
 			errHandle(
-				apierr.ToStatusError(apierr.NewInternalError(apierr.CryptMidEncFailed, err)),
+				apierr.ToStatusError(apierr.NewInternalError(apierr.CryptMidEncFailed, err).WithRequestTypeAndId(rqType, rqId)),
 				marshaler.GetMarshaler(c.GetHeader("Accept")),
 				c.Writer,
 			)
 			return
 		}
 		bdWriter.body = bytes.NewBuffer(encrypted)
-		debugCb("crypt-middleware: body out=" + bdWriter.body.String())
+		debugCb(logPrefix + "body out=" + bdWriter.body.String())
 	}
 }

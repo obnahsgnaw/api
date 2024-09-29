@@ -3,6 +3,8 @@ package apierr
 import (
 	"errors"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // ApiError app error
@@ -13,6 +15,8 @@ type ApiError struct {
 	Message    string        // 错误信息 如果为空则使用code中定义的message
 	Replace    []interface{} // 字符串的替换值
 	Data       interface{}   // 传递一些数据
+	RqType     string
+	RqId       string
 }
 
 func (e ApiError) Unwrap() error {
@@ -29,6 +33,12 @@ func (e ApiError) SetTarget(k, v string) {
 
 func (e ApiError) SetLocal(local string) {
 	e.ErrCode = e.ErrCode.WithLocal(local)
+}
+
+func (e ApiError) WithRequestTypeAndId(tp, id string) *ApiError {
+	e.RqType = tp
+	e.RqId = id
+	return &e
 }
 
 // NewApiErr 创建新的 app error
@@ -121,6 +131,20 @@ func ToStatusError(err error) *runtime.HTTPStatusError {
 		HTTPStatus: apiErr.StatusCode.Value(),
 		Err:        apiErr,
 	}
+}
+func ToRpcError(err error) error {
+	if err == nil {
+		return nil
+	}
+	var customStatus *runtime.HTTPStatusError
+	if errors.As(err, &customStatus) {
+		err = customStatus.Err
+	}
+	var apiErr *ApiError
+	if !errors.As(err, &apiErr) {
+		apiErr = NewCommonInternalError(err)
+	}
+	return status.Error(codes.Code(apiErr.StatusCode.Value()), apiErr.Message)
 }
 
 func SetLocal(err error, local string) error {
