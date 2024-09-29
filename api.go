@@ -241,6 +241,14 @@ func (s *Server) Run(failedCb func(error)) {
 	if s.rpcServer != nil {
 		s.app.AddServer(s.rpcServer)
 		s.logger.Debug("api rpc service enabled")
+		if s.Engine().Http().Config() != nil {
+			if s.Engine().Http().Config().AccessWriter != nil {
+				s.rpcServer.With(rpc.AccessWriter(s.Engine().Http().Config().AccessWriter))
+			}
+			if s.Engine().Http().Config().ErrWriter != nil {
+				s.rpcServer.With(rpc.ErrorWriter(s.Engine().Http().Config().ErrWriter))
+			}
+		}
 	}
 	if err = s.initEngine(); err != nil {
 		failedCb(err)
