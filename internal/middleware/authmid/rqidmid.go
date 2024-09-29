@@ -9,7 +9,7 @@ import (
 func NewRqIdMid() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rqId := c.Request.Header.Get("X-Request-Id")
-		if rqId == "" || len(rqId) != 35 || !strings.HasSuffix(rqId, "rq_") {
+		if rqId == "" || len(rqId) != 35 || !strings.HasPrefix(rqId, "rq_") {
 			rqId = utils.GenLocalId("rq")
 			c.Request.Header.Set("X-Request-ID", rqId)
 		}
