@@ -1,4 +1,12 @@
 
+<a name="v0.28.26"></a>
+## [v0.28.26](https://8.140.161.172/wangsb/wgateway/compare/v0.28.25...v0.28.26) (2024-09-29)
+
+### Bug Fixes
+
+* **rqmid:** x
+
+
 <a name="v0.28.25"></a>
 ## [v0.28.25](https://8.140.161.172/wangsb/wgateway/compare/v0.28.24...v0.28.25) (2024-09-29)
 
