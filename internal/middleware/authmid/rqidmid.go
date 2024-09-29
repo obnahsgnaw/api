@@ -10,7 +10,8 @@ func NewRqIdMid() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rqId := c.Request.Header.Get("X-Request-Id")
 		if rqId == "" || len(rqId) != 35 || !strings.HasSuffix(rqId, "rq_") {
-			c.Request.Header.Set("X-Request-ID", utils.GenLocalId("rq"))
+			rqId = utils.GenLocalId("rq")
+			c.Request.Header.Set("X-Request-ID", rqId)
 		}
 		c.Request.Header.Set("X-Request-Type", "http")
 		c.Request.Header.Set("X-Request-From", "client")
