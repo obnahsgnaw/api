@@ -1,4 +1,12 @@
 
+<a name="v0.28.33"></a>
+## [v0.28.33](https://8.140.161.172/wangsb/wgateway/compare/v0.28.32...v0.28.33) (2024-10-22)
+
+### Bug Fixes
+
+* **pkg apierr:** fix Message format
+
+
 <a name="v0.28.32"></a>
 ## [v0.28.32](https://8.140.161.172/wangsb/wgateway/compare/v0.28.31...v0.28.32) (2024-10-22)
 
