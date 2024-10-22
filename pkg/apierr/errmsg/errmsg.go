@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/obnahsgnaw/application/pkg/utils"
+	"strconv"
 	"strings"
 )
 
@@ -16,8 +17,9 @@ var (
 )
 
 type LocalMessage struct {
+	projectId   string
 	defLanguage Language
-	data        map[Language][]LanguageMessage
+	data        map[string]map[Language][]LanguageMessage
 }
 
 func (s *LocalMessage) SetDefaultLanguage(l Language) {
@@ -26,10 +28,17 @@ func (s *LocalMessage) SetDefaultLanguage(l Language) {
 	}
 }
 
+func (s *LocalMessage) SetProjectId(projectId int) {
+	s.projectId = strconv.Itoa(projectId)
+}
+
 func (s *LocalMessage) Load(lange Language, data []byte) error {
 	var v LanguageMessage
 	if utils.ParseJson(data, &v) {
-		s.data[lange] = append(s.data[lange], v)
+		if _, ok := s.data[s.projectId]; !ok {
+			s.data[s.projectId] = make(map[Language][]LanguageMessage)
+		}
+		s.data[s.projectId][lange] = append(s.data[s.projectId][lange], v)
 		return nil
 	}
 	return errors.New("invalid language data")
@@ -39,12 +48,24 @@ func (s *LocalMessage) Translate(lang Language, target string, params ...interfa
 	if lang == "" {
 		lang = s.defLanguage
 	}
+	projectId := "0"
+	if strings.ContainsAny(target, "@") {
+		targets := strings.Split(target, "@")
+		projectId = targets[0]
+		target = targets[1]
+	}
+	var projectMsgs map[Language][]LanguageMessage
 	var msgs []LanguageMessage
 	var ok bool
-	if msgs, ok = s.data[lang]; !ok {
-		if msgs, ok = s.data[s.defLanguage]; !ok {
-			if msgs, ok = s.data[En]; !ok {
-				return target
+	if projectMsgs, ok = s.data[projectId]; !ok {
+		projectMsgs, _ = s.data["0"]
+	}
+	if projectMsgs != nil && len(projectMsgs) > 0 {
+		if msgs, ok = projectMsgs[lang]; !ok {
+			if msgs, ok = projectMsgs[s.defLanguage]; !ok {
+				if msgs, ok = projectMsgs[En]; !ok {
+					return target
+				}
 			}
 		}
 	}
@@ -83,15 +104,18 @@ func (s *LocalMessage) Translate(lang Language, target string, params ...interfa
 }
 
 func (s *LocalMessage) Merge(l *LocalMessage) {
-	for lang, langMsgs := range l.data {
-		if _, ok := s.data[lang]; !ok {
-			s.data[lang] = langMsgs
+	if _, ok := s.data[s.projectId]; !ok {
+		s.data[l.projectId] = make(map[Language][]LanguageMessage)
+	}
+	for lang, langMsgs := range l.data[l.projectId] {
+		if _, ok := s.data[l.projectId][lang]; !ok {
+			s.data[l.projectId][lang] = langMsgs
 		} else {
-			s.data[lang] = append(s.data[lang], langMsgs...)
+			s.data[l.projectId][lang] = append(s.data[l.projectId][lang], langMsgs...)
 		}
 	}
 }
 
 func New() *LocalMessage {
-	return &LocalMessage{data: make(map[Language][]LanguageMessage), defLanguage: En}
+	return &LocalMessage{projectId: "0", defLanguage: En, data: make(map[string]map[Language][]LanguageMessage)}
 }

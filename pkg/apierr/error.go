@@ -19,26 +19,29 @@ type ApiError struct {
 	RqId       string
 }
 
-func (e ApiError) Unwrap() error {
+func (e *ApiError) Unwrap() error {
 	return e.RawErr
 }
 
-func (e ApiError) Error() string {
+func (e *ApiError) Error() string {
 	return e.ErrCode.Message(e.Replace, e.Message)
 }
 
-func (e ApiError) SetTarget(k, v string) {
+func (e *ApiError) SetTarget(k, v string) {
 	e.ErrCode = e.ErrCode.WithTarget(k, v)
 }
 
-func (e ApiError) SetLocal(local string) {
+func (e *ApiError) SetLocal(local string) {
 	e.ErrCode = e.ErrCode.WithLocal(local)
 }
+func (e *ApiError) SetProject(id int, name string) {
+	e.ErrCode = e.ErrCode.WithProject(id, name)
+}
 
-func (e ApiError) WithRequestTypeAndId(tp, id string) *ApiError {
+func (e *ApiError) WithRequestTypeAndId(tp, id string) *ApiError {
 	e.RqType = tp
 	e.RqId = id
-	return &e
+	return e
 }
 
 // NewApiErr 创建新的 app error
@@ -151,6 +154,14 @@ func SetLocal(err error, local string) error {
 	var errr *ApiError
 	if errors.As(err, &errr) {
 		errr.SetLocal(local)
+		return errr
+	}
+	return err
+}
+func SetProject(err error, id int, name string) error {
+	var errr *ApiError
+	if errors.As(err, &errr) {
+		errr.SetProject(id, name)
 		return errr
 	}
 	return err
