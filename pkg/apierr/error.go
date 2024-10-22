@@ -34,6 +34,7 @@ func (e *ApiError) SetTarget(k, v string) {
 func (e *ApiError) SetLocal(local string) {
 	e.ErrCode = e.ErrCode.WithLocal(local)
 }
+
 func (e *ApiError) SetProject(id int, name string) {
 	e.ErrCode = e.ErrCode.WithProject(id, name)
 }
