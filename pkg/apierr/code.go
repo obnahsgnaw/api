@@ -63,14 +63,18 @@ func (c ErrCode) Code() uint32 {
 
 // Message 描述文字
 func (c ErrCode) Message(params []interface{}, replaceMsg string) string {
+	pjn := c.projectName
+	if pjn != "" {
+		pjn += ": "
+	}
 	if replaceMsg != "" {
-		return c.projectName + replaceMsg
+		return pjn + replaceMsg
 	}
 	if c.messageHandle != nil {
-		return c.projectName + c.messageHandle(c, params)
+		return pjn + c.messageHandle(c, params)
 	}
 
-	return c.projectName + "internal error"
+	return pjn + "internal error"
 }
 
 func (c ErrCode) WithTarget(key, val string) ErrCode {
