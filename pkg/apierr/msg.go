@@ -11,3 +11,7 @@ func init() {
 func SetDefaultMsg(message *errmsg.LocalMessage) {
 	ErrMsg.Merge(message)
 }
+
+func RegisterErrorMessage(message *errmsg.LocalMessage) {
+	ErrMsg.Merge(message)
+}
