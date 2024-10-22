@@ -1,4 +1,44 @@
 
+<a name="v0.28.32"></a>
+## [v0.28.32](https://8.140.161.172/wangsb/wgateway/compare/v0.28.31...v0.28.32) (2024-10-22)
+
+### Bug Fixes
+
+* **pkg apierr:** fix project error message
+
+
+<a name="v0.28.31"></a>
+## [v0.28.31](https://8.140.161.172/wangsb/wgateway/compare/v0.28.30...v0.28.31) (2024-10-01)
+
+### Bug Fixes
+
+* **x:** x
+
+
+<a name="v0.28.30"></a>
+## [v0.28.30](https://8.140.161.172/wangsb/wgateway/compare/v0.28.29...v0.28.30) (2024-09-29)
+
+### Bug Fixes
+
+* **x:** x
+
+
+<a name="v0.28.29"></a>
+## [v0.28.29](https://8.140.161.172/wangsb/wgateway/compare/v0.28.28...v0.28.29) (2024-09-29)
+
+### Bug Fixes
+
+* **x:** x
+
+
+<a name="v0.28.28"></a>
+## [v0.28.28](https://8.140.161.172/wangsb/wgateway/compare/v0.28.27...v0.28.28) (2024-09-29)
+
+### Features
+
+* **x:** x
+
+
 <a name="v0.28.27"></a>
 ## [v0.28.27](https://8.140.161.172/wangsb/wgateway/compare/v0.28.26...v0.28.27) (2024-09-29)
 
