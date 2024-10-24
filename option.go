@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/obnahsgnaw/api/internal/middleware/authmid"
+	"github.com/obnahsgnaw/api/internal/middleware/commonmid"
 	"github.com/obnahsgnaw/api/internal/middleware/permmid"
 	"github.com/obnahsgnaw/api/pkg/apierr"
 	"github.com/obnahsgnaw/api/pkg/errobj"
@@ -102,5 +103,12 @@ func ErrCodePrefix(p int) Option {
 func WithoutRoutePrefix() Option {
 	return func(s *Server) {
 		s.withoutRoutePrefix = true
+	}
+}
+func CommonMiddleware(name string, handler func(c *gin.Context, rqId, rqType string, debugger func(string)) error) Option {
+	return func(s *Server) {
+		s.AddMiddleware(name, func() gin.HandlerFunc {
+			return commonmid.NewCommonMid(handler, func(msg string) { s.logger.Debug(msg) }, s.ErrorHandler())
+		}, false)
 	}
 }
