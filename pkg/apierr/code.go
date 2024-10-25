@@ -40,11 +40,11 @@ type MessageHandler func(e ErrCode, params []interface{}) string
 func DefaultMessageHandler(msg *errmsg.LocalMessage, e ErrCode, params []interface{}, defaultMsg string) string {
 	target := e.Target("target")
 	if target == "" {
-		target = e.projectId + "@" + strconv.Itoa(int(e.Code()))
+		target = strconv.Itoa(int(e.Code()))
 	} else {
-		target = e.projectId + "@" + strconv.Itoa(int(e.Code())) + "." + target
+		target = strconv.Itoa(int(e.Code())) + "." + target
 	}
-	str := msg.Translate(errmsg.Language(e.Local()), target, params...)
+	str := msg.Translate(errmsg.Language(e.Local()), e.projectId+"@"+target, params...)
 	if str == target && defaultMsg != "" {
 		return defaultMsg
 	}
