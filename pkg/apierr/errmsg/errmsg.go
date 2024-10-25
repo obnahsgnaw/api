@@ -53,6 +53,9 @@ func (s *LocalMessage) Translate(lang Language, target string, params ...interfa
 		targets := strings.Split(target, "@")
 		projectId = targets[0]
 		target = targets[1]
+		if projectId == "" {
+			projectId = "0"
+		}
 	}
 	var projectMsgs map[Language][]LanguageMessage
 	var msgs []LanguageMessage

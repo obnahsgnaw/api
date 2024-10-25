@@ -19,7 +19,7 @@ func NewCommonMid(handler func(c *gin.Context, rqId, rqType string, debugger fun
 		if err := handler(c, rqId, rqType, debugCb); err != nil {
 			c.Abort()
 			errHandle(
-				apierr.ToStatusError(apierr.NewUnauthorizedError(apierr.AuthMidInvalid, err).WithRequestTypeAndId(rqType, rqId)),
+				apierr.ToStatusError(apierr.NewValidateError(err.Error()).WithRequestTypeAndId(rqType, rqId)),
 				marshaler.GetMarshaler(c.Request.Header.Get("Accept")),
 				c.Writer,
 			)
