@@ -38,6 +38,7 @@ func NewAppMid(manager *authedapp.Manager, debugCb func(msg string), errHandle f
 		} else {
 			app = igApp
 			debugCb(logPrefix + "validate ignored by ignorer")
+			c.Request.Header.Set("X-App-ReplacedId", appId)
 		}
 		c.Request.Header.Set(manager.AppidHeaderKey(), app.AppId())
 
