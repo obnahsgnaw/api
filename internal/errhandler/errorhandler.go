@@ -22,7 +22,7 @@ func OutgoingHeaderMatcher(key string) (string, bool) {
 	if key == "StatusCode" {
 		return key, true
 	}
-	if strings.HasPrefix(key, "X-") {
+	if strings.HasPrefix(key, "x-") {
 		return key, true
 	}
 	return fmt.Sprintf("%s%s", runtime.MetadataHeaderPrefix, key), true
