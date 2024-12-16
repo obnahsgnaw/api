@@ -21,6 +21,7 @@ type MuxRouteHandleFunc func(w http.ResponseWriter, r *http.Request, pathParams 
 type MethodMdProvider struct {
 	defProvider    MdProviders
 	methodProvider map[string]MdProviders
+	all            bool
 }
 
 func NewMdProvider() *MethodMdProvider {
@@ -62,4 +63,12 @@ func (p *MethodMdProvider) Range(ctx context.Context, q *http.Request, handler f
 			handler(k, pp(ctx, q))
 		}
 	}
+}
+
+func (p *MethodMdProvider) AddAll() {
+	p.all = true
+}
+
+func (p *MethodMdProvider) All() bool {
+	return p.all
 }

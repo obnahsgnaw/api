@@ -222,6 +222,10 @@ func (s *Server) AddDefIncomeMd(key string, valProvider service.MdValParser) {
 	s.mdProvider.AddDefault(key, valProvider)
 }
 
+func (s *Server) AddAllIncomeMd() {
+	s.mdProvider.AddAll()
+}
+
 func (s *Server) AddIncomeMd(method, key string, valProvider service.MdValParser) {
 	s.mdProvider.Add(method, key, valProvider)
 }
