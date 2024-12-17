@@ -42,6 +42,9 @@ func (p *MethodMdProvider) Add(method, key string, parser MdValParser) {
 	if method == "" || key == "" || parser == nil {
 		return
 	}
+	if p.methodAll(method) {
+		return
+	}
 	if _, ok := p.methodProvider[method]; !ok {
 		p.methodProvider[method] = make(MdProviders)
 	}
@@ -69,6 +72,30 @@ func (p *MethodMdProvider) AddAll() {
 	p.all = true
 }
 
+func (p *MethodMdProvider) AddMethodAll(method string) {
+	if method == "" {
+		return
+	}
+	p.methodProvider[method] = make(MdProviders)
+	p.methodProvider[method]["all"] = nil
+}
+
 func (p *MethodMdProvider) All() bool {
 	return p.all
+}
+
+func (p *MethodMdProvider) MethodAll(ctx context.Context) bool {
+	method, ok := runtime.RPCMethod(ctx)
+	if !ok {
+		return false
+	}
+	return p.methodAll(method)
+}
+
+func (p *MethodMdProvider) methodAll(method string) bool {
+	if v, ok := p.methodProvider[method]; ok && len(v) == 1 {
+		_, ok = v["all"]
+		return ok
+	}
+	return false
 }
