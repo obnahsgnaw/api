@@ -230,6 +230,10 @@ func (s *Server) AddIncomeMd(method, key string, valProvider service.MdValParser
 	s.mdProvider.Add(method, key, valProvider)
 }
 
+func (s *Server) AddMethodAllIncomeMd(method string) {
+	s.mdProvider.AddMethodAll(method)
+}
+
 // ErrCode return err code factory
 func (s *Server) ErrCode() *apierr.Factory {
 	return s.errFactory

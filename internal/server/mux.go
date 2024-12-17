@@ -25,7 +25,7 @@ func InitMux(mux *runtime.ServeMux, mdProviders *service.MethodMdProvider, middl
 		// trans header to metadata
 		runtime.WithMetadata(func(ctx context.Context, request *http.Request) metadata.MD {
 			var metaData []string
-			if mdProviders.All() {
+			if mdProviders.All() || mdProviders.MethodAll(ctx) {
 				for k, v := range request.Header {
 					metaData = append(metaData, k, strings.Join(v, " "))
 				}
@@ -46,6 +46,7 @@ func InitMux(mux *runtime.ServeMux, mdProviders *service.MethodMdProvider, middl
 		runtime.WithMarshalerOption("*", marshaler.JsonMarshaler()),
 		runtime.WithMarshalerOption("application/json", marshaler.JsonMarshaler()),
 		runtime.WithMarshalerOption("application/octet-stream", marshaler.ProtoMarshaler()),
+		runtime.WithMarshalerOption("application/x-protobuf", marshaler.ProtoMarshaler()),
 	}
 	if len(middlewares) > 0 {
 		for _, m := range middlewares {
