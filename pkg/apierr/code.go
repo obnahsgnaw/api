@@ -140,6 +140,10 @@ func (f *Factory) SetProjectName(name string) {
 	}
 }
 
+func (f *Factory) SetProjectId(projectId int) {
+	f.projectId = strconv.Itoa(projectId)
+}
+
 // NewErrCode return a new ErrCode
 func (f *Factory) NewErrCode(code uint32, msgHandler ErrMsgHandler) ErrCode {
 	return f.NewErrorCode(code, func(e ErrCode, params []interface{}) string {
