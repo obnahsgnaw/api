@@ -87,12 +87,14 @@ func DocServer(config *apidoc.Config) Option {
 func RpcServer() Option {
 	return func(s *Server) {
 		s.rpcServer = rpc.New(s.app, s.httpEngine.Http().Listener(), s.id, s.name, s.endType, rpc.NewPServer(s.id, s.serverType), rpc.RegEnable())
+		s.initRpcError()
 	}
 }
 func RpcIns(ins *rpc.Server) Option {
 	return func(s *Server) {
 		s.rpcServer = ins
 		s.rpcServer.AddRegInfo(s.id, s.name, rpc.NewPServer(s.id, s.serverType))
+		s.initRpcError()
 	}
 }
 func ErrCodePrefix(p int) Option {

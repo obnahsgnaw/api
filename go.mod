@@ -9,14 +9,12 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0
 	github.com/obnahsgnaw/application v0.17.10
 	github.com/obnahsgnaw/http v0.2.10
-	github.com/obnahsgnaw/rpc v0.6.14
+	github.com/obnahsgnaw/rpc v0.6.15
 	go.uber.org/zap v1.23.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 )
-
-replace github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 => github.com/obnahsgnaw/grpc-gateway/v2 v2.16.0
 
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
@@ -59,3 +57,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 => github.com/obnahsgnaw/grpc-gateway/v2 v2.16.0

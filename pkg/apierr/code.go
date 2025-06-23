@@ -189,3 +189,13 @@ func newCommonErrCode(code uint32, msg string) ErrCode {
 		},
 	}
 }
+
+func NewErrMsgCode(code uint32, msg string) ErrCode {
+	return ErrCode{
+		common: true,
+		code:   code,
+		messageHandle: func(e ErrCode, params []interface{}) string {
+			return msg
+		},
+	}
+}

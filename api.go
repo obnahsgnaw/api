@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/obnahsgnaw/api/engine"
@@ -88,14 +89,6 @@ func New(app *application.Application, e *engine.MuxHttp, id, name string, et en
 	e.Http().AddInitializer(s.initHttp)
 	s.With(options...)
 	return s
-}
-
-func logCnf(app *application.Application, et endtype.EndType, id string) *logger.Config {
-	cnf := logger.CopyCnfWithLevel(app.LogConfig())
-	if cnf != nil {
-		cnf.SetFilename(utils.ToStr(servertype.Api.String(), "-", et.String(), "-", id))
-	}
-	return cnf
 }
 
 func (s *Server) With(options ...Option) {
@@ -492,4 +485,30 @@ func (s *Server) regGateway() error {
 
 func (s *Server) apiServerError(msg string, err error) error {
 	return utils.TitledError(utils.ToStr("api server[", s.name, "] error"), msg, err)
+}
+
+func (s *Server) initRpcError() {
+	if s.rpcServer != nil {
+		s.rpcServer.SetCustomErrorParser(func(err error) (code string, message string, statusCode string) {
+			var apiErr *apierr.ApiError
+			if errors.As(err, &apiErr) {
+				code = strconv.Itoa(int(apiErr.ErrCode.Code()))
+				message = apiErr.Error()
+				statusCode = apiErr.StatusCode.String()
+			} else {
+				code = "1"
+				message = err.Error()
+				statusCode = "500"
+			}
+
+			return
+		})
+		s.rpcServer.SetCustomErrorBuilder(func(code, message, statusCode string) (err error) {
+			codeV, _ := strconv.Atoi(code)
+			statusCodeV, _ := strconv.Atoi(statusCode)
+			codeVV := apierr.NewErrMsgCode(uint32(codeV), message)
+			err = apierr.NewApiErr(apierr.HttpStatus(statusCodeV), codeVV, nil)
+			return
+		})
+	}
 }
