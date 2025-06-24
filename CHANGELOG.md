@@ -1,4 +1,56 @@
 
+<a name="v0.28.43"></a>
+## [v0.28.43](https://8.140.161.172/wangsb/wgateway/compare/v0.28.42...v0.28.43) (2025-06-24)
+
+
+<a name="v0.28.42"></a>
+## [v0.28.42](https://8.140.161.172/wangsb/wgateway/compare/v0.28.41...v0.28.42) (2025-06-23)
+
+
+<a name="v0.28.41"></a>
+## [v0.28.41](https://8.140.161.172/wangsb/wgateway/compare/v0.28.40...v0.28.41) (2025-05-26)
+
+
+<a name="v0.28.40"></a>
+## [v0.28.40](https://8.140.161.172/wangsb/wgateway/compare/v0.28.39...v0.28.40) (2024-12-17)
+
+
+<a name="v0.28.39"></a>
+## [v0.28.39](https://8.140.161.172/wangsb/wgateway/compare/v0.28.38...v0.28.39) (2024-12-16)
+
+### Bug Fixes
+
+* **x:** x
+
+
+<a name="v0.28.38"></a>
+## [v0.28.38](https://8.140.161.172/wangsb/wgateway/compare/v0.28.37...v0.28.38) (2024-12-16)
+
+
+<a name="v0.28.37"></a>
+## [v0.28.37](https://8.140.161.172/wangsb/wgateway/compare/v0.28.36...v0.28.37) (2024-11-29)
+
+### Bug Fixes
+
+* **code:** fix DefaultMessageHandler
+
+
+<a name="v0.28.36"></a>
+## [v0.28.36](https://8.140.161.172/wangsb/wgateway/compare/v0.28.35...v0.28.36) (2024-11-03)
+
+
+<a name="v0.28.35"></a>
+## [v0.28.35](https://8.140.161.172/wangsb/wgateway/compare/v0.28.34...v0.28.35) (2024-10-25)
+
+### Bug Fixes
+
+* **middleware and errcode:** fix mid err status and err message
+
+
+<a name="v0.28.34"></a>
+## [v0.28.34](https://8.140.161.172/wangsb/wgateway/compare/v0.28.33...v0.28.34) (2024-10-24)
+
+
 <a name="v0.28.33"></a>
 ## [v0.28.33](https://8.140.161.172/wangsb/wgateway/compare/v0.28.32...v0.28.33) (2024-10-22)
 
