@@ -491,7 +491,8 @@ func (s *Server) initRpcError() {
 	if s.rpcServer != nil {
 		s.rpcServer.SetCustomErrorParser(func(err error) (code string, message string, statusCode string) {
 			var apiErr *apierr.ApiError
-			if errors.As(err, &apiErr) {
+			var runtimeErr *runtime.HTTPStatusError
+			if errors.As(err, &apiErr) || (errors.As(err, &runtimeErr) && errors.As(runtimeErr.Err, &apiErr)) {
 				code = strconv.Itoa(int(apiErr.ErrCode.Code()))
 				message = apiErr.Error()
 				statusCode = apiErr.StatusCode.String()

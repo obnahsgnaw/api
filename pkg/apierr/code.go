@@ -7,18 +7,18 @@ import (
 )
 
 var (
-	None              = newCommonErrCode(0, "success")
-	InternalError     = newCommonErrCode(1, "internal error")
-	ValidateFailed    = newCommonErrCode(2, "invalid arguments")
-	ConflictError     = newCommonErrCode(3, "operate conflict")
-	AppMidInvalid     = newCommonErrCode(11, "application identify invalid")
-	AuthMidInvalid    = newCommonErrCode(12, "authorization token invalid")
-	CryptMidDecFailed = newCommonErrCode(13, "data decrypt failed")
-	CryptMidEncFailed = newCommonErrCode(14, "data encrypt failed")
-	SignMidInvalid    = newCommonErrCode(15, "signature invalid")
-	SignMidGenFailed  = newCommonErrCode(16, "signature generate failed")
-	PermMidNoPerm     = newCommonErrCode(17, "no permission")
-	RpcFailed         = newCommonErrCode(18, "rpc call failed")
+	None              = NewCommonErrCode(0, "success")
+	InternalError     = NewCommonErrCode(1, "internal error")
+	ValidateFailed    = NewCommonErrCode(2, "invalid arguments")
+	ConflictError     = NewCommonErrCode(3, "operate conflict")
+	AppMidInvalid     = NewCommonErrCode(11, "application identify invalid")
+	AuthMidInvalid    = NewCommonErrCode(12, "authorization token invalid")
+	CryptMidDecFailed = NewCommonErrCode(13, "data decrypt failed")
+	CryptMidEncFailed = NewCommonErrCode(14, "data encrypt failed")
+	SignMidInvalid    = NewCommonErrCode(15, "signature invalid")
+	SignMidGenFailed  = NewCommonErrCode(16, "signature generate failed")
+	PermMidNoPerm     = NewCommonErrCode(17, "no permission")
+	RpcFailed         = NewCommonErrCode(18, "rpc call failed")
 )
 
 // ErrCode 错误码
@@ -119,6 +119,21 @@ func (c ErrCode) WithProject(id int, name string) ErrCode {
 	return *c1
 }
 
+func (c ErrCode) Clone() ErrCode {
+	return ErrCode{
+		common:        c.common,
+		code:          c.Code(),
+		projectId:     c.projectId,
+		projectName:   c.projectName,
+		messageHandle: c.messageHandle,
+		tmp:           c.tmp,
+	}
+}
+
+func (c ErrCode) SetMessageHandler(messageHandler MessageHandler) {
+	c.messageHandle = messageHandler
+}
+
 // ------------------------------------------------------------------------
 
 type Factory struct {
@@ -175,10 +190,10 @@ func (f *Factory) NewMsgErrCode(code uint32, msg string) ErrCode {
 
 // NewCommonErrCode return a common ErrCode
 func (f *Factory) NewCommonErrCode(code uint32, msg string) ErrCode {
-	return newCommonErrCode(code, msg)
+	return NewCommonErrCode(code, msg)
 }
 
-func newCommonErrCode(code uint32, msg string) ErrCode {
+func NewCommonErrCode(code uint32, msg string) ErrCode {
 	return ErrCode{
 		projectName: "",
 		projectId:   "",
